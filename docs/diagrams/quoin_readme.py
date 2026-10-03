@@ -453,7 +453,7 @@ def steps(d, c, spread=0.0, h=0):
     """A vertical chain of boxes joined by arrows: a request path, a pipeline.
     d: title, steps [(label, sub, extra or None, kind)], note, desc; kind is a
     box kind ("backend", "database", ...). spread opens the gaps between boxes."""
-    g = round(16 * spread)
+    g = round(32 * spread)
     b, y = head(d["title"], c)
     y -= 10
     for i, (label, sub, extra, k) in enumerate(d["steps"]):
