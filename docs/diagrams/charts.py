@@ -11,11 +11,14 @@ a copy of the Quoin README module.
 import re
 from pathlib import Path
 
-from quoin_readme import (THEMES, GREEN, BLUE, RED, M, R, text, note, head, svg, arrow, tag, box, box_h,
+from quoin_readme import (THEMES, GREEN, BLUE, RED, M, R, CH, text, note, head, svg, arrow, tag, box, box_h,
                           pair, panels)
 
 HERE = Path(__file__).resolve().parent
 RECEIPT = HERE.parent / "runs" / "2026-09-30-m4-vs-m1.txt"
+CASES = HERE.parent.parent / "cases" / "semi-deterministic.yaml"
+CASE_ID = "intent-billing-question"
+WRAP = 44  # characters of 12-unit mono across the 328-unit text column
 
 FLOW_DESC = ("You declare cases with checks in cases/*.yaml. septdrift run sends each case to the "
              "on-device model and writes a hash-chained recording whose header names the chip, OS "
@@ -78,12 +81,114 @@ def measured(c, spread=0.0, h=0):
         desc=MEASURED_DESC), c, spread, h)
 
 
-PAIRS = [("flow", flow, "measured", measured)]
+def terminal(heading, rows, foot, title, desc, c, spread=0.0, h=0):
+    """A terminal panel wrapped for a phone (memvet's helper). A row is
+    [(column, text, colour key or series index)]; a series index puts a swatch
+    before the word and sets the word in ink. spread opens the row gap."""
+    b, y = head(heading, c)
+    y -= 6
+    for line in rows:
+        for col, t, k in line:
+            x = M + 4 + col * 12 * CH
+            if isinstance(k, str):
+                b.append(text(x, y, t, 12, c[k]))
+                continue
+            b.append(f'<rect x="{x - 8.5:g}" y="{y - 8:g}" width="6" height="6" rx="1.5" fill="{c["series"][k]}"/>')
+            b.append(text(x, y, t, 12, c["ink"], weight=600))
+        y += 19 + round(6 * spread)
+    lines, y = note(y + 8, foot, c)
+    return svg(max(y, h), title, desc, b + lines, c)
+
+
+def wrapped(line, width=WRAP):
+    """Split one source line into rows of at most width characters, each
+    continuation indented four spaces past the line's own indent."""
+    indent = len(line) - len(line.lstrip())
+    rows, rest = [], line
+    while len(rest) > width:
+        cut = rest.rfind(" ", indent + 1, width + 1)
+        cut = cut if cut > indent else width
+        rows.append(rest[:cut].rstrip())
+        rest = " " * (indent + 4) + rest[cut:].lstrip()
+    return rows + [rest]
+
+
+def case_lines():
+    """The case block for CASE_ID, line for line from the case file."""
+    src = CASES.read_text().splitlines()
+    start = src.index(f"- id: {CASE_ID}")
+    end = next(i for i in range(start + 1, len(src)) if not src[i].strip())
+    return src[start:end]
+
+
+def at_indent(r, key):
+    """One row whose leading spaces become its column, since SVG collapses them."""
+    return [(len(r) - len(r.lstrip()), r.lstrip(), key)]
+
+
+def case_file(c, spread=0.0, h=0):
+    rows = [at_indent(r, "ink") for line in case_lines() for r in wrapped(line)]
+    return terminal("A case: what you declare", rows,
+                    "Three repeats, two checks. Every response is recorded in a hash-chained JSONL file.",
+                    f"cases/semi-deterministic.yaml, {CASE_ID}",
+                    "The case " + CASE_ID + " from cases/semi-deterministic.yaml: " + " ".join(
+                        l.strip() for l in case_lines()), c, spread, h)
+
+
+CLASS_KEY = {"flip": RED, "fix": GREEN}
+
+
+def diff_rows():
+    """(case, check, rate A, rate B, delta, class) for the two checks of CASE_ID
+    and the one flip, parsed from the receipt."""
+    rows = []
+    for line in RECEIPT.read_text().splitlines():
+        parts = line.split()
+        if len(parts) >= 8 and (parts[0] == CASE_ID or parts[-1] == "flip"):
+            case, check, ra, pa, rb, pb, delta, cls = parts[0], parts[1], *parts[-6:]
+            rows.append((case, check, ra, rb, delta, cls))  # the (rate) beside each count is dropped
+    return rows
+
+
+def sides():
+    text_ = RECEIPT.read_text()
+    out = []
+    for side in "AB":
+        line = next(l for l in text_.splitlines() if l.startswith(f"side {side}:"))
+        chip = line.split("chip=")[1].split(" osBuild=")[0]
+        build = line.split("osBuild=")[1].split()[0]
+        out.append(f"side {side}: chip={chip} osBuild={build}")
+    return out
+
+
+def diff_output(c, spread=0.0, h=0):
+    receipt = RECEIPT.read_text()
+    rows = [[(0, s, "ink2")] for s in sides()] + [[]]
+    for case, check, a, b, delta, cls in diff_rows():
+        rows.append([(0, case, "ink")])
+        rows += [at_indent(r, "ink2") for r in wrapped("  " + check)]
+        tail = f"A {a} B {b} {delta}"
+        rows.append([(2, tail, "ink2"), (len(tail) + 4, cls, CLASS_KEY.get(cls, "ink2"))])
+    counts = next(l for l in receipt.splitlines() if l.startswith("counts:"))
+    rows += [[]] + [at_indent(r, "ink") for r in wrapped(counts)] + [[(0, "exit: 1", "ink")]]
+    desc = (" ".join(sides()) + ". " + " ".join(
+        f"{case} {check}: A {a}, B {b}, {delta}, {cls}." for case, check, a, b, delta, cls in diff_rows())
+        + f" {counts}. exit: 1.")
+    return terminal("Its diff: what you get", rows,
+                    "The two Macs run different model variants (M4 sparse_16, M1 14.4): two Macs, not a regression.",
+                    "septdrift diff, M4 against M1", desc, c, spread, h)
+
+
+PAIRS = [("flow", flow, "measured", measured),
+         ("case-file", case_file, "diff-output", diff_output)]
 
 
 def main():
     receipt = RECEIPT.read_text()
     assert "osBuild=26A434" in receipt and "counts: flips=1 degrades=0 fixes=4 unchanged=43" in receipt
+    assert "exit: 1" in receipt and len(diff_rows()) == 3, diff_rows()
+    assert all(len(r) <= WRAP for line in case_lines() for r in wrapped(line))
+    assert all(len(f"A {a} B {b} {d}") + 4 + len(k) <= WRAP for _, _, a, b, d, k in diff_rows())
     for name, a, n, b2, m in CHANGED:  # each rate is in the receipt, M4 then M1
         assert re.search(rf"{a}/{n} \([\d.]+\)\s+{b2}/{m} \([\d.]+\)", receipt), name
     for theme, c in THEMES.items():

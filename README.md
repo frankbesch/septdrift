@@ -41,6 +41,25 @@ The receipt is
 
 ## How it works
 
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/case-file-dark.svg"/><img width="400" align="top" src="docs/diagrams/case-file-light.svg" alt="Code: the case intent-billing-question from cases/semi-deterministic.yaml. Text version below."/></picture> <picture><source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/diff-output-dark.svg"/><img width="400" align="top" src="docs/diagrams/diff-output-light.svg" alt="Terminal: septdrift diff rows for that case and the one flip, from the M4 against M1 receipt. Text version below."/></picture></p>
+
+<details><summary>Text version of the case and its diff</summary>
+
+The case `intent-billing-question` in `cases/semi-deterministic.yaml` asks
+the model to classify a billing email into one of five intents, as JSON with
+the fields intent and evidence, three times. Its checks:
+`json_field_equals` intent is `billing_question`, and `max_wall_ms: 4000`.
+
+The diff rows are the receipt's, wrapped for a phone, with the rate beside
+each count left out. Side A is the Apple M4 and side B the Apple M1, both on
+26A434. deal-exception-facts-absent-fail-closed,
+`json_field_equals:facts_present=false`: A 3/3, B 2/3, -0.333, flip.
+intent-billing-question, `json_field_equals:intent=billing_question`: A 0/3,
+B 3/3, +1.000, fix. intent-billing-question, `max_wall_ms:4000`: A 3/3, B
+3/3, unchanged. Counts: flips=1, degrades=0, fixes=4, unchanged=43. Exit 1.
+
+</details>
+
 - **Cases** are YAML: an id, instructions, a prompt, an optional output
   schema, a repeat count, and checks.
 - **Checks:** `contains`, `not_contains`, `regex`, `json_field_equals`,
