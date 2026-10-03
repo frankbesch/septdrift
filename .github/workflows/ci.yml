@@ -1,0 +1,26 @@
+name: CI
+# Fixture tests only: no model calls. A live recording is meaningful only on
+# the target Mac. The xcode-27 image is in public preview on GitHub-hosted
+# runners; the package needs the macOS 27 SDK.
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  test:
+    runs-on: xcode-27
+    steps:
+      - uses: actions/checkout@v4
+      - name: Toolchain
+        run: sw_vers && swift --version
+      - name: Build
+        run: swift build -c release
+      - name: Fixture diff exits 1 on the planted flips
+        run: |
+          B=.build/release/septdrift
+          $B run cases/day2.yaml --backend fixture --fixtures fixtures/side-a.jsonl --out a.jsonl
+          $B run cases/day2.yaml --backend fixture --fixtures fixtures/side-b.jsonl --out b.jsonl
+          set +e; $B diff a.jsonl b.jsonl; rc=$?; set -e
+          test "$rc" -eq 1
+      - name: Tests
+        run: ./scripts/test.sh

@@ -1,0 +1,77 @@
+# Semi-deterministic boundary cases (added 2026-09-22).
+# Pattern: unstructured input → model picks ONE value from a predefined set →
+# deterministic checks own the verdict. The model never invents a category;
+# `needs_review` is the fail-closed choice when evidence is insufficient.
+# Amended 2026-09-29: every case repeats 3 times.
+# Source: Nate B. Jones, frame 6.
+
+- id: intent-renewal-risk
+  instructions: "Classify the customer message. Choose intent from exactly this set: renewal_risk, billing_question, feature_request, support_bug, needs_review. Pick needs_review when the message does not clearly fit one intent."
+  prompt: "Customer email: 'We are reviewing all vendor contracts before Q4 and our CFO asked why we still pay for this. Can someone walk us through the value before we decide on the renewal?'"
+  format: json
+  schema:
+    - {name: intent, kind: string, description: "one of renewal_risk, billing_question, feature_request, support_bug, needs_review", optional: false}
+    - {name: evidence, kind: string, description: "the phrase that decided the intent", optional: false}
+  repeat: 3
+  checks:
+    - json_field_equals: {field: intent, value: "renewal_risk"}
+    - max_wall_ms: 4000
+
+- id: intent-billing-question
+  instructions: "Classify the customer message. Choose intent from exactly this set: renewal_risk, billing_question, feature_request, support_bug, needs_review. Pick needs_review when the message does not clearly fit one intent."
+  prompt: "Customer email: 'The invoice for August shows two line items for the same seat count. Is one of them a duplicate?'"
+  format: json
+  schema:
+    - {name: intent, kind: string, description: "one of renewal_risk, billing_question, feature_request, support_bug, needs_review", optional: false}
+    - {name: evidence, kind: string, description: "the phrase that decided the intent", optional: false}
+  repeat: 3
+  checks:
+    - json_field_equals: {field: intent, value: "billing_question"}
+    - max_wall_ms: 4000
+
+- id: intent-fail-closed
+  instructions: "Classify the customer message. Choose intent from exactly this set: renewal_risk, billing_question, feature_request, support_bug, needs_review. Pick needs_review when the message does not clearly fit one intent."
+  prompt: "Customer email: 'Thanks for the call yesterday.'"
+  format: json
+  schema:
+    - {name: intent, kind: string, description: "one of renewal_risk, billing_question, feature_request, support_bug, needs_review", optional: false}
+    - {name: evidence, kind: string, description: "the phrase that decided the intent", optional: false}
+  repeat: 3
+  checks:
+    - json_field_equals: {field: intent, value: "needs_review"}
+    - max_wall_ms: 4000
+
+- id: intent-no-invented-category
+  instructions: "Classify the customer message. Choose intent from exactly this set: renewal_risk, billing_question, feature_request, support_bug, needs_review. Pick needs_review when the message does not clearly fit one intent."
+  prompt: "Customer email: 'Our team would love a dark mode and a keyboard shortcut for search.'"
+  format: json
+  schema:
+    - {name: intent, kind: string, description: "one of renewal_risk, billing_question, feature_request, support_bug, needs_review", optional: false}
+    - {name: evidence, kind: string, description: "the phrase that decided the intent", optional: false}
+  repeat: 3
+  checks:
+    - json_field_equals: {field: intent, value: "feature_request"}
+    - not_contains: "ui_feedback"
+    - max_wall_ms: 4000
+
+- id: intent-repeat-stability
+  instructions: "Classify the customer message. Choose intent from exactly this set: renewal_risk, billing_question, feature_request, support_bug, needs_review. Pick needs_review when the message does not clearly fit one intent."
+  prompt: "Customer email: 'Export to CSV crashes the app every time since Monday.'"
+  format: json
+  schema:
+    - {name: intent, kind: string, description: "one of renewal_risk, billing_question, feature_request, support_bug, needs_review", optional: false}
+    - {name: evidence, kind: string, description: "the phrase that decided the intent", optional: false}
+  options:
+    temperature: 0.0
+  repeat: 3
+  checks:
+    - json_field_equals: {field: intent, value: "support_bug"}
+    - max_wall_ms: 4000
+
+- id: intent-prose-forbidden
+  instructions: "Reply with exactly one word from this set and nothing else: renewal_risk, billing_question, feature_request, support_bug, needs_review."
+  prompt: "Customer email: 'Before we sign for another year we need to see the roadmap.'"
+  repeat: 3
+  checks:
+    - regex: '^(renewal_risk|billing_question|feature_request|support_bug|needs_review)\s*$'
+    - max_output_tokens: 12

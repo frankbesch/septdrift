@@ -1,0 +1,158 @@
+# Typed-question cases (added 2026-09-24).
+# Extends semi-deterministic.yaml (choice shape only) with the three question
+# shapes from Jev (Diogo Almeida via Daniel Miessler):
+#   noul   "is this true?"   -> bool field            -> an `if`
+#   choice "which one?"      -> UNORDERED string set  -> a `switch`
+#   score  "how much?"       -> ORDERED ladder        -> sort / threshold
+# One deal state is decomposed into six small questions instead of one "should
+# this deal be approved?" prompt; two more cases ask the gate noul and the
+# materiality ladder on a thin second state ("Customer asked for a quote.") to
+# prove both fail-closed branches. Each answer feeds deterministic
+# routing; `needs_review` stays the fail-closed value on every choice set.
+# Score fail-closed paths (2026-09-24): a probability-weighted score must carry no
+# fail-closed rung (TypeSafe primitives_score: "a probability-weighted mean of
+# the level numbers"), so every score has a companion noul (facts present?)
+# that code consults first. septdrift reads the ladder by string equality, a
+# choice contract, so the materiality ladder ALSO keeps
+# needs_review. Two paths, each with a live case: the first live M4 run
+# (2026-09-24) failed the companion noul open 2/2. Arithmetic (discount bands)
+# is computed by code and stated in the context, never asked of the model.
+# Threshold semantics on the ladder ("high or above escalates") are asserted
+# with json_field_rank (SPEC v0.3.5); needs_review is off the ladder, so it
+# fails the threshold.
+# Amended 2026-09-29: every case repeats 3 times, so a
+# rate separates a degrade from a flip. Guided generation refused the first
+# wording of deal-legal-review-needed and deal-materiality-facts-present on
+# every run (error refusal, about 90 ms, "May contain sensitive content"). The
+# same wording answers in format: text (probed 2026-09-30), so the refusal
+# belongs to the schema path, not to the prompt text alone.
+# Both are reworded; the wording is brittle (renaming the bool field brought
+# the refusal back). deal-legal-review-refused keeps the first legal wording
+# and asserts the refusal, so a guardrail change across OS updates shows as a flip.
+
+- id: deal-standard-structure
+  instructions: "You answer one yes/no question about a sales deal. Standard structure means: 1-year term, net-30 payment, a stated discount band at or below 15 percent, no custom contract clauses. Read the discount band stated in the summary; never compute it. Return is_standard true only when every condition holds."
+  context: "Deal summary: 3-year term, net-90 payment requested (our standard is net-30), 22 percent discount (discount band: above 15 percent, computed by code), customer asks for a custom indemnification cap clause."
+  prompt: "Is this deal a standard commercial structure?"
+  format: json
+  schema:
+    - {name: is_standard, kind: bool, description: "true only when every standard condition holds", optional: false}
+    - {name: evidence, kind: string, description: "the deal fact that decided the answer", optional: false}
+  repeat: 3
+  checks:
+    - json_field_equals: {field: is_standard, value: false}
+    - max_wall_ms: 4000
+
+- id: deal-legal-review-needed
+  instructions: "You answer one yes/no question about a sales deal. Set requires_legal_review to true when the summary states a request for a custom contract clause. Payment terms and discounts alone never set it to true."
+  context: "Deal summary: 3-year term, net-90 payment requested (our standard is net-30), 22 percent discount (discount band: above 15 percent, computed by code), customer asks for a custom indemnification cap clause."
+  prompt: "Does the customer ask for a custom contract clause?"
+  format: json
+  schema:
+    - {name: requires_legal_review, kind: bool, description: "true when a custom contract clause is requested", optional: false}
+    - {name: evidence, kind: string, description: "the deal fact that decided the answer", optional: false}
+  repeat: 3
+  checks:
+    - json_field_equals: {field: requires_legal_review, value: true}
+    - max_wall_ms: 4000
+
+- id: deal-approval-policy
+  instructions: "Pick exactly one approval policy from this set: sales_manager, deal_desk, vp_approval, needs_review. Read the discount band stated in the summary; never compute it. Band 'at or below 10 percent' is sales_manager; '11 to 15 percent' is deal_desk; 'above 15 percent' is vp_approval. Pick needs_review when no discount band is stated."
+  context: "Deal summary: 3-year term, net-90 payment requested (our standard is net-30), 22 percent discount (discount band: above 15 percent, computed by code), customer asks for a custom indemnification cap clause."
+  prompt: "Which approval policy applies?"
+  format: json
+  schema:
+    - {name: approval_policy, kind: string, description: "one of sales_manager, deal_desk, vp_approval, needs_review", optional: false}
+    - {name: evidence, kind: string, description: "the deal fact that decided the choice", optional: false}
+  repeat: 3
+  checks:
+    - json_field_equals: {field: approval_policy, value: "vp_approval"}
+    - max_wall_ms: 4000
+
+- id: deal-deviation-materiality
+  instructions: "Rate the contract deviation on exactly this ordered ladder, lowest to highest: none, low, medium, high. Rules: no deviations is none; payment terms only is low; a discount band above 15 percent is medium; any custom clause is high. Report the highest rung that applies. Answer needs_review when the summary states no contract facts; never guess a rung. Code asks this only after deal-materiality-facts-present answered true, so needs_review is the second fail-closed path."
+  context: "Deal summary: 3-year term, net-90 payment requested (our standard is net-30), 22 percent discount (discount band: above 15 percent, computed by code), customer asks for a custom indemnification cap clause."
+  prompt: "How material is the contract deviation?"
+  format: json
+  schema:
+    - {name: materiality, kind: string, description: "one rung of none, low, medium, high, or needs_review", optional: false}
+    - {name: evidence, kind: string, description: "the deal fact that set the rung", optional: false}
+  repeat: 3
+  checks:
+    - json_field_equals: {field: materiality, value: "high"}
+    - json_field_rank: {field: materiality, ladder: [none, low, medium, high], min: high}
+    - max_wall_ms: 4000
+
+- id: deal-materiality-fail-closed
+  instructions: "Rate the contract deviation on exactly this ordered ladder, lowest to highest: none, low, medium, high. Rules: no deviations is none; payment terms only is low; a discount band above 15 percent is medium; any custom clause is high. Report the highest rung that applies. Answer needs_review when the summary states no contract facts; never guess a rung. Code asks this only after deal-materiality-facts-present answered true, so needs_review is the second fail-closed path."
+  context: "Deal summary: Customer asked for a quote."
+  prompt: "How material is the contract deviation?"
+  format: json
+  schema:
+    - {name: materiality, kind: string, description: "one rung of none, low, medium, high, or needs_review", optional: false}
+    - {name: evidence, kind: string, description: "the deal fact that set the rung, or the words 'no contract facts'", optional: false}
+  repeat: 3
+  checks:
+    - json_field_equals: {field: materiality, value: "needs_review"}
+    - max_wall_ms: 4000
+
+- id: deal-materiality-facts-present
+  instructions: "You answer one yes/no question about a sales deal. Return facts_present true when the summary states at least one of: term length, payment terms, a discount band, or a custom clause request. Return false otherwise."
+  context: "Deal summary: 3-year term, net-90 payment requested (our standard is net-30), 22 percent discount (discount band: above 15 percent, computed by code), customer asks for a custom indemnification cap clause."
+  prompt: "Does this deal summary state any deal terms?"
+  format: json
+  schema:
+    - {name: facts_present, kind: bool, description: "true when at least one deal term is stated", optional: false}
+    - {name: evidence, kind: string, description: "the deal fact that decided the answer", optional: false}
+  repeat: 3
+  checks:
+    - json_field_equals: {field: facts_present, value: true}
+    - max_wall_ms: 4000
+
+- id: deal-exception-facts-absent-fail-closed
+  # The fail-closed gate for every score in this set: when facts_present is
+  # false, code routes the deal to needs_review and never asks a score. Reworded
+  # 2026-09-30: the first wording put that routing sentence in the instructions
+  # and failed open 5/6 on 26A434 (rep3-a, rep3-b) with invented facts ("20%
+  # discount band", "12 months term"). Probe (scratch, 6 reps each): the routing
+  # sentence alone drops the pass rate to 1/6; the sibling wording, a verbatim
+  # evidence rule, evidence-first field order, and summary-in-prompt each pass
+  # 6/6. The verbatim rule is kept because it also makes the evidence auditable;
+  # it held 36/36 on the thin, rich, and a distractor state over two runs.
+  instructions: "You answer one yes/no question about a deal summary. Contract facts are: a term length, payment terms, a discount band, or a contract clause request. The summary is the only source. Copy the evidence word for word from the summary. If no words in the summary state a contract fact, write the evidence 'no contract facts' and answer false. Never add facts that the summary does not state."
+  context: "Deal summary: Customer asked for a quote."
+  prompt: "Does the summary contain contract facts?"
+  format: json
+  schema:
+    - {name: facts_present, kind: bool, description: "true only when the evidence is copied from the summary", optional: false}
+    - {name: evidence, kind: string, description: "words copied from the summary, or the words 'no contract facts'", optional: false}
+  repeat: 3
+  checks:
+    - json_field_equals: {field: facts_present, value: false}
+    - contains: "no contract facts"
+    - max_wall_ms: 4000
+
+- id: deal-owning-specialist
+  instructions: "Pick exactly one owner for the exception from this unordered set: legal, finance, security, needs_review. Rules: contract clause changes go to legal; payment-term or discount exceptions go to finance; data-handling or access requests go to security. When more than one applies, pick the owner of the custom clause. Pick needs_review when no exception is described."
+  context: "Deal summary: 3-year term, net-90 payment requested (our standard is net-30), 22 percent discount (discount band: above 15 percent, computed by code), customer asks for a custom indemnification cap clause."
+  prompt: "Which specialist owns this exception?"
+  format: json
+  schema:
+    - {name: owner, kind: string, description: "one of legal, finance, security, needs_review", optional: false}
+    - {name: evidence, kind: string, description: "the deal fact that decided the owner", optional: false}
+  repeat: 3
+  checks:
+    - json_field_equals: {field: owner, value: "legal"}
+    - max_wall_ms: 4000
+
+- id: deal-legal-review-refused
+  instructions: "You answer one yes/no question about a sales deal. Legal review is required when the customer asks for any custom contract clause or any change to indemnification, liability, or governing law. Payment terms and discounts alone never require legal review."
+  context: "Deal summary: 3-year term, net-90 payment requested (our standard is net-30), 22 percent discount (discount band: above 15 percent, computed by code), customer asks for a custom indemnification cap clause."
+  prompt: "Does this deal require legal review?"
+  format: json
+  schema:
+    - {name: requires_legal_review, kind: bool, description: "true when a custom clause or indemnification change is requested", optional: false}
+    - {name: evidence, kind: string, description: "the deal fact that decided the answer", optional: false}
+  repeat: 3
+  checks:
+    - expect_error: refusal

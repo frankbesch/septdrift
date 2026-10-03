@@ -1,0 +1,222 @@
+<title>Septdrift Brief</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --paper: #f5f6f3;
+    --panel: #ffffff;
+    --ink: #17202a;
+    --ink-2: #4a5563;
+    --ink-3: #7b8592;
+    --rule: #d6dad4;
+    --seal: #0f6e6b;      /* receipts, verified */
+    --seal-soft: #dcefec;
+    --flip: #c4521a;      /* a check that flipped */
+    --flip-soft: #f7e3d6;
+    --mono-bg: #eceee9;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #141a1f; --panel: #1c242b; --ink: #e8ebe6; --ink-2: #b4bcc4; --ink-3: #7f8993;
+      --rule: #303a43; --seal: #4fb8b2; --seal-soft: #173634; --flip: #e8814f; --flip-soft: #3d2416; --mono-bg: #232c34;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #141a1f; --panel: #1c242b; --ink: #e8ebe6; --ink-2: #b4bcc4; --ink-3: #7f8993;
+    --rule: #303a43; --seal: #4fb8b2; --seal-soft: #173634; --flip: #e8814f; --flip-soft: #3d2416; --mono-bg: #232c34;
+  }
+  body { background: var(--paper); color: var(--ink); font-family: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif; font-size: 14px; line-height: 1.45; }
+  .page { max-width: 1040px; margin: 0 auto; padding-block: 28px 40px; padding-inline: 20px; display: grid; gap: 22px; }
+  h1, h2, h3 { font-family: "Archivo", "Helvetica Neue", Arial, sans-serif; text-wrap: balance; margin: 0; }
+  h1 { font-size: 34px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.05; }
+  h2 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; color: var(--ink-3); }
+  h3 { font-size: 15px; font-weight: 700; }
+  p { margin: 0; }
+  code, .mono { font-family: "IBM Plex Mono", "SFMono-Regular", Menlo, monospace; font-size: 12.5px; }
+  code { background: var(--mono-bg); padding: 1px 5px; border-radius: 3px; }
+  a { color: var(--seal); }
+
+  header { display: grid; gap: 10px; padding-bottom: 18px; border-bottom: 2px solid var(--ink); }
+  .kicker { font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--ink-3); letter-spacing: 0.04em; }
+  .thesis { font-size: 17px; max-width: 64ch; color: var(--ink-2); }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 12.5px; color: var(--ink-3); }
+  .meta b { color: var(--ink); font-weight: 600; }
+
+  .three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+  .three > section { display: grid; gap: 8px; align-content: start; }
+  .three p { max-width: 42ch; }
+  .three ul { margin: 0; padding-left: 18px; display: grid; gap: 5px; }
+
+  .arch { display: grid; grid-template-columns: 1.15fr 1fr; gap: 22px; }
+  .panel { background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 16px 18px; display: grid; gap: 12px; align-content: start; }
+  .pipe { width: 100%; height: auto; max-width: 100%; display: block; }
+  .pipe text { font-family: "IBM Plex Mono", monospace; font-size: 11.5px; fill: var(--ink); }
+  .pipe .lbl { fill: var(--ink-3); font-size: 10.5px; }
+  .pipe .box { fill: var(--panel); stroke: var(--ink); stroke-width: 1.2; }
+  .pipe .seal { fill: var(--seal-soft); stroke: var(--seal); }
+  .pipe .flip { fill: var(--flip-soft); stroke: var(--flip); }
+  .pipe .edge { stroke: var(--ink-2); stroke-width: 1.2; fill: none; marker-end: url(#arr); }
+
+  table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+  th { text-align: left; font-weight: 600; color: var(--ink-3); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; padding: 0 8px 6px 0; border-bottom: 1px solid var(--rule); }
+  td { padding: 5px 8px 5px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  tr:last-child td { border-bottom: 0; }
+  td.k { font-family: "IBM Plex Mono", monospace; white-space: nowrap; }
+  .scroll { overflow-x: auto; }
+
+  .receipt { font-family: "IBM Plex Mono", monospace; font-size: 11.5px; line-height: 1.5; background: var(--mono-bg); border-left: 3px solid var(--seal); padding: 10px 12px; border-radius: 0 4px 4px 0; white-space: pre; overflow-x: auto; color: var(--ink); }
+  .receipt .c { color: var(--ink-3); }
+  .receipt .f { color: var(--flip); font-weight: 500; }
+
+  .facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .fact { display: grid; gap: 2px; padding-top: 10px; border-top: 1px solid var(--rule); }
+  .fact .n { font-family: "Archivo", sans-serif; font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .fact .l { font-size: 12px; color: var(--ink-3); }
+
+  footer { font-size: 12px; color: var(--ink-3); border-top: 1px solid var(--rule); padding-top: 12px; display: flex; flex-wrap: wrap; gap: 6px 18px; }
+
+  @media (max-width: 760px) {
+    .three, .arch, .facts { grid-template-columns: 1fr; }
+    .facts { grid-template-columns: 1fr 1fr; }
+    h1 { font-size: 28px; }
+  }
+  @media print {
+    body { background: #fff; color: #000; font-size: 11.5px; }
+    .page { padding-block: 0; gap: 14px; }
+    .panel { break-inside: avoid; }
+    a { color: inherit; text-decoration: none; }
+  }
+</style>
+
+<div class="page">
+  <header>
+    <div class="kicker">SEPTDRIFT · ONE-PAGE BRIEF · 2026-09-22 · WEEK ONE, DAY 5</div>
+    <h1>The on-device model changes every September. Septdrift tells you what your feature lost.</h1>
+    <p class="thesis">A macOS command-line harness that runs declared cases against Apple's Foundation Models, records every answer as a hash-chained receipt, and diffs two recordings. A check that passed before and fails now is a <b>flip</b>, and a flip is exit code 1.</p>
+    <div class="meta">
+      <span><b>Platform</b> macOS 27.0+, Swift 6, Command Line Tools only</span>
+      <span><b>Model</b> Apple on-device 3B via FoundationModels</span>
+      <span><b>Repo</b> github.com/frankbesch/septdrift</span>
+      <span><b>Status</b> week-one build, 116 tests, day 4 pending a second Mac</span>
+    </div>
+  </header>
+
+  <div class="three">
+    <section>
+      <h2>Why</h2>
+      <h3>Behavior drifts under you, silently.</h3>
+      <p>A feature built on the on-device model ships against one model build. Each macOS release replaces that model. Nothing in the app changes, yet answers, timings, guardrail behavior, and structured output can all move.</p>
+      <p>Today the only signal is a user report. Septdrift turns "it used to work" into a recording from before, a recording from after, and a diff that names the check, the chip, the OS build, and the model asset ID on both sides.</p>
+      <p>The first finding came on day 3: asked what an AFE is in oil and gas, the 3B model answered with a different invented expansion on every run. With the definition supplied in context and asked for back, it passed 3 of 3.</p>
+    </section>
+    <section>
+      <h2>How</h2>
+      <h3>Declare, record, verify, diff.</h3>
+      <ul>
+        <li><b>Declare</b> cases in YAML: prompt, optional instructions and context, text or JSON format with an ordered schema, generation options, repeat count, and one or more checks.</li>
+        <li><b>Record</b> each response as a receipt: content, wall time, token usage, model asset IDs, typed error, and the outcome of every check. Records chain by SHA-256 over canonical bytes.</li>
+        <li><b>Verify</b> a recording offline: every hash, the chain, sequence contiguity, the trailer count, and that every expected (case, rep) appears exactly once.</li>
+        <li><b>Diff</b> two recordings by case ID and check identity. Pass rate per side, then a class: flip, degrade, fix, or unchanged. Medians and error-kind counts per side.</li>
+        <li><b>Fixture backend</b> replays canned answers with no model call, so the whole path runs in CI.</li>
+      </ul>
+    </section>
+    <section>
+      <h2>What</h2>
+      <h3>Four commands, five exit codes.</h3>
+      <div class="scroll"><table>
+        <tr><td class="k">run</td><td>Run every case against <code>system</code> or <code>fixture</code>; write one recording. Exits 0 when it completes; the diff judges.</td></tr>
+        <tr><td class="k">verify</td><td>Recompute the chain. Prints <code>OK n results</code> or the first failure with its seq.</td></tr>
+        <tr><td class="k">diff</td><td>Score B against A. <code>--json</code>, <code>--fail-on-fix</code>, <code>--allow-request-drift</code>.</td></tr>
+        <tr><td class="k">cases</td><td>Validate a file or directory and list what it declares.</td></tr>
+      </table></div>
+      <p class="mono" style="color:var(--ink-3)">exit 0 ok · 1 flips · 2 model unavailable · 3 validation · 4 I/O or incompatible inputs</p>
+      <p>Checks: <code>contains</code>, <code>not_contains</code>, <code>regex</code>, <code>json_field_equals</code> (typed by schema kind), <code>max_wall_ms</code>, <code>max_output_tokens</code>, <code>expect_error</code>.</p>
+    </section>
+  </div>
+
+  <div class="arch">
+    <section class="panel">
+      <h2>Architecture</h2>
+      <svg class="pipe" viewBox="0 0 560 190" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pipeline: case file to backend to recorder to checks, two recordings into diff, scorecard and exit code">
+        <defs><marker id="arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--ink-2)"/></marker></defs>
+        <!-- row 1: run -->
+        <rect class="box" x="8" y="18" width="98" height="40" rx="3"/>
+        <text x="57" y="35" text-anchor="middle">cases/*.yaml</text>
+        <text class="lbl" x="57" y="50" text-anchor="middle">Case · CaseLoader</text>
+        <path class="edge" d="M106,38 H134"/>
+        <rect class="box" x="136" y="18" width="110" height="40" rx="3"/>
+        <text x="191" y="35" text-anchor="middle">Backend</text>
+        <text class="lbl" x="191" y="50" text-anchor="middle">system | fixture</text>
+        <path class="edge" d="M246,38 H274"/>
+        <rect class="box" x="276" y="18" width="92" height="40" rx="3"/>
+        <text x="322" y="35" text-anchor="middle">Checks</text>
+        <text class="lbl" x="322" y="50" text-anchor="middle">pure functions</text>
+        <path class="edge" d="M368,38 H396"/>
+        <rect class="box seal" x="398" y="18" width="154" height="40" rx="3"/>
+        <text x="475" y="35" text-anchor="middle">Recorder → receipt/0.2</text>
+        <text class="lbl" x="475" y="50" text-anchor="middle">run · result × n · end, sha256 chain</text>
+        <!-- row 2: two recordings -->
+        <rect class="box seal" x="150" y="96" width="120" height="34" rx="3"/>
+        <text x="210" y="117" text-anchor="middle">A: before.jsonl</text>
+        <rect class="box seal" x="290" y="96" width="120" height="34" rx="3"/>
+        <text x="350" y="117" text-anchor="middle">B: after.jsonl</text>
+        <path class="edge" d="M475,58 V78 H210 V94"/>
+        <path class="edge" d="M350,78 V94"/>
+        <!-- row 3: diff -->
+        <path class="edge" d="M210,130 V146 H262"/>
+        <path class="edge" d="M350,130 V146 H298"/>
+        <rect class="box flip" x="264" y="136" width="34" height="22" rx="3"/>
+        <text x="281" y="151" text-anchor="middle">diff</text>
+        <path class="edge" d="M298,147 H326"/>
+        <text x="330" y="151">scorecard · flips → exit 1</text>
+        <text class="lbl" x="8" y="151">verify() runs on both sides first</text>
+      </svg>
+      <div class="scroll"><table>
+        <tr><th>Module</th><th>Owns</th></tr>
+        <tr><td class="k">Case, CaseLoader</td><td>YAML/JSON → <code>[Case]</code>; every validation rule fails the run before any model call (exit 3).</td></tr>
+        <tr><td class="k">Backend</td><td><code>protocol Backend { respond(to:rep:) async throws -> Result }</code>. <code>SystemBackend</code> wraps <code>LanguageModelSession</code>, one fresh session per (case, rep), maps <code>LanguageModelError</code> to six typed kinds. <code>FixtureBackend</code> replays JSONL keyed by (caseID, rep).</td></tr>
+        <tr><td class="k">Checks</td><td><code>(Check, Case, Result) → {pass, reason}</code>. Error short-circuits every check except <code>expect_error</code>.</td></tr>
+        <tr><td class="k">Canonical, Recorder</td><td>Canonical JSON bytes (sorted keys, no whitespace, integral numbers as ints, explicit nulls). Header before the first call, trailer after the last: a crash leaves the file incomplete by construction. Exclusive create; verify checks runID on every record.</td></tr>
+        <tr><td class="k">Diff</td><td>Pairs by caseID; rate per (case, check identity) per side; flip / degrade / fix / unchanged; request-hash drift excluded when allowed; text and JSON renderings carry the same fields.</td></tr>
+        <tr><td class="k">CLI</td><td>swift-argument-parser glue only. Dependencies: Yams, swift-argument-parser. No Xcode project, no app bundle.</td></tr>
+      </table></div>
+    </section>
+
+    <section class="panel">
+      <h2>One receipt, shortened</h2>
+<div class="receipt"><span class="c">// result record, M4, macOS 27.0 (26A428), live</span>
+{"schema":"receipt/0.2","type":"result","seq":1,
+ "runID":"a47fc76b-…","ts":"2026-09-22T08:28:09Z",
+ "caseID":"afe-no-context","rep":0,
+ "requestSHA256":"…","assetIDs":["com.apple.fm.language.instruct_3b…"],
+ "content":"An AFE, or Accommodation Fee Estimate, …",
+ "wallMs":1421,"tokens":{"in":76,"cached":0,"out":37,"reasoning":0},
+ "error":null,"errorDetail":null,
+ "checks":[
+   {"name":"contains","arg":"Authorization for Expenditure",<span class="f">"pass":false</span>,"reason":"not found"},
+   {"name":"max_wall_ms","arg":"3000","pass":true,"reason":null}],
+ "prev":"e76eddf9…","sha256":"3b1c…"}</div>
+      <p style="font-size:12.5px;color:var(--ink-2)">Every field that can move between OS builds is on the record: the model asset IDs, the host's chip and build, timings, tokens, and the outcome of each declared check. The hash covers the canonical bytes with <code>sha256</code> blanked; <code>prev</code> is the previous record's hash value. Ten fixed hash vectors ship in the tests so a second implementation can match byte for byte.</p>
+      <p style="font-size:12.5px;color:var(--ink-2)"><b>Limitation, stated.</b> The chain is unsigned. <code>verify</code> proves a file is internally consistent, not where it came from. Signing is a non-goal in v0.3.</p>
+
+      <h2 style="margin-top:6px">Guarantees the design leans on</h2>
+      <ul style="margin:0;padding-left:18px;display:grid;gap:5px;font-size:12.5px">
+        <li>Check identity is (name, argument); a scorecard row is stable across runs and machines.</li>
+        <li>Repeats give rates, not booleans: 2/3 vs 3/3 is a degrade, 3/3 vs 2/3 is a flip.</li>
+        <li>Diff refuses incompatible inputs (different <code>casesSHA256</code>) unless request drift is allowed, and then lists the changed requests instead of scoring them.</li>
+        <li>Tests never call the model. Live runs are receipts, not tests.</li>
+      </ul>
+    </section>
+  </div>
+
+  <div class="facts">
+    <div class="fact"><span class="n">116</span><span class="l">tests, fixture backend only, under Command Line Tools</span></div>
+    <div class="fact"><span class="n">13 / 22</span><span class="l">Codex code-review findings accepted and applied on day 5</span></div>
+    <div class="fact"><span class="n">5 flips</span><span class="l">in the keyed fixture pair, matching the expected scorecard on all 13 rows</span></div>
+    <div class="fact"><span class="n">80 KB</span><span class="l">tarball to run on a second Mac: <code>scripts/mini-run.sh</code></span></div>
+  </div>
+
+  <footer>
+    <span>Week-one plan: PLAN-week1.md · Contract: SPEC.md v0.3.3 · Reviews: reviews/ (Codex spec review day 1, code review day 5)</span>
+    <span>Next: M1 mini recording on 27.0, then the first 27.1 beta diff. Week 2: strict receipt typing in verify, tolerances and label sets, more backends behind the same protocol.</span>
+  </footer>
+</div>

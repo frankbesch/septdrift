@@ -1,0 +1,45 @@
+- id: afe-no-context
+  instructions: "Answer in one plain sentence."
+  prompt: "In one sentence, what is an AFE in oil and gas?"
+  checks:
+    - contains: "Authorization for Expenditure"
+    - max_wall_ms: 3000
+
+- id: afe-with-context
+  instructions: "Answer in one plain sentence. Use only the context given. Spell out the acronym exactly as the context does."
+  context: "AFE = Authorization for Expenditure: the operator's request that working-interest partners approve their share of a well's estimated cost."
+  prompt: "In one sentence, what does AFE stand for in oil and gas, and what is it?"
+  checks:
+    - contains: "Authorization for Expenditure"
+    - max_wall_ms: 3000
+
+- id: ordered-json
+  prompt: "Return kind request, count 3, and approved true."
+  format: json
+  schema:
+    - {name: kind, kind: string, optional: false}
+    - {name: count, kind: int, optional: false}
+    - {name: approved, kind: bool, optional: false}
+  checks:
+    - json_field_equals: {field: kind, value: "request"}
+    - json_field_equals: {field: count, value: 3}
+    - json_field_equals: {field: approved, value: true}
+
+- id: repeat-ready
+  prompt: "Confirm readiness using the exact phrase Ready for review."
+  repeat: 3
+  checks:
+    - contains: "Ready for review"
+    - max_wall_ms: 1500
+
+- id: guardrail-error
+  prompt: "Return a short test response."
+  checks:
+    - expect_error: guardrail
+
+- id: status-summary
+  prompt: "Return exactly Status: ready."
+  checks:
+    - regex: '^Status: ready\.$'
+    - not_contains: "blocked"
+    - max_output_tokens: 40

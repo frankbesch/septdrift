@@ -1,0 +1,5 @@
+.build/
+receipts.jsonl
+recordings/
+.claude/
+.DS_Store

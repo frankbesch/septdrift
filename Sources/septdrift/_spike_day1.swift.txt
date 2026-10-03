@@ -1,0 +1,96 @@
+// septdrift — day one. Three questions, one run:
+//  1. Is the on-device model available to a CLI built with `swift build`?
+//  2. What does one response look like (content, and whatever usage/metadata rides on it)?
+//  3. Can we write a receipt-shaped record (versioned, hash-chained) for that run?
+import Foundation
+import FoundationModels
+import CryptoKit
+
+// MARK: 1. availability
+let model = SystemLanguageModel.default
+switch model.availability {
+case .available:
+    print("model: available")
+case .unavailable(let reason):
+    print("model: UNAVAILABLE — \(reason)")
+    exit(2)
+}
+
+// MARK: 2. one answer
+let prompt = CommandLine.arguments.dropFirst().joined(separator: " ").isEmpty
+    ? "In one sentence, what is a joint interest billing statement?"
+    : CommandLine.arguments.dropFirst().joined(separator: " ")
+
+let session = LanguageModelSession(instructions: "Answer in one plain sentence.")
+let t0 = Date()
+let response = try await session.respond(to: prompt)
+let ms = Int(Date().timeIntervalSince(t0) * 1000)
+
+print("prompt:  \(prompt)")
+print("content: \(response.content)")
+print("wall_ms: \(ms)")
+print("usage: in=\(response.usage.input.totalTokenCount) (cached \(response.usage.input.cachedTokenCount)) out=\(response.usage.output.totalTokenCount) (reasoning \(response.usage.output.reasoningTokenCount))")
+
+// MARK: 3. receipt-shaped record
+struct Receipt: Codable {
+    var schema = "receipt/0.1"
+    let ts: String
+    let os: String
+    let osBuild: String
+    let chip: String
+    let backend: String
+    let promptSHA256: String
+    let content: String
+    let wallMs: Int
+    let promptTokens: Int
+    let responseTokens: Int
+    let assetIDs: [String]     // the model build that answered — the drift key
+    let prev: String          // hash of the previous record; "genesis" for the first
+    var sha256: String = ""   // hash of this record with sha256 = "" at signing time
+}
+
+func sha256(_ s: String) -> String {
+    SHA256.hash(data: Data(s.utf8)).map { String(format: "%02x", $0) }.joined()
+}
+func shell(_ cmd: String) -> String {
+    let p = Process(); p.launchPath = "/bin/zsh"; p.arguments = ["-c", cmd]
+    let pipe = Pipe(); p.standardOutput = pipe; try? p.run(); p.waitUntilExit()
+    return String(decoding: pipe.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
+        .trimmingCharacters(in: .whitespacesAndNewlines)
+}
+
+let ledger = URL(fileURLWithPath: "receipts.jsonl")
+let prevHash: String = {
+    guard let text = try? String(contentsOf: ledger, encoding: .utf8),
+          let last = text.split(separator: "\n").last,
+          let obj = try? JSONSerialization.jsonObject(with: Data(last.utf8)) as? [String: Any],
+          let h = obj["sha256"] as? String else { return "genesis" }
+    return h
+}()
+
+var r = Receipt(
+    ts: ISO8601DateFormatter().string(from: Date()),
+    os: ProcessInfo.processInfo.operatingSystemVersionString,
+    osBuild: shell("sw_vers -buildVersion"),
+    chip: shell("sysctl -n machdep.cpu.brand_string"),
+    backend: "SystemLanguageModel.default",
+    promptSHA256: sha256(prompt),
+    content: response.content,
+    wallMs: ms,
+    promptTokens: response.usage.input.totalTokenCount,
+    responseTokens: response.usage.output.totalTokenCount,
+    assetIDs: response.transcriptEntries.compactMap { entry -> [String]? in
+        if case .response(let r) = entry { return r.assetIDs }
+        return nil
+    }.flatMap { $0 },
+    prev: prevHash
+)
+let enc = JSONEncoder(); enc.outputFormatting = [.sortedKeys]
+r.sha256 = sha256(String(decoding: try enc.encode(r), as: UTF8.self))
+let line = String(decoding: try enc.encode(r), as: UTF8.self) + "\n"
+if FileManager.default.fileExists(atPath: ledger.path) {
+    let h = try FileHandle(forWritingTo: ledger); try h.seekToEnd(); try h.write(contentsOf: Data(line.utf8)); try h.close()
+} else {
+    try line.write(to: ledger, atomically: true, encoding: .utf8)
+}
+print("receipt: appended to receipts.jsonl (prev=\(prevHash.prefix(8)) sha=\(r.sha256.prefix(8)))")

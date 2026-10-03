@@ -1,0 +1,634 @@
+<title>Septdrift Use Cases</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --paper: #f5f6f3; --panel: #ffffff; --ink: #17202a; --ink-2: #4a5563; --ink-3: #7b8592;
+    --rule: #d6dad4; --seal: #0f6e6b; --seal-soft: #dcefec; --flip: #c4521a; --flip-soft: #f7e3d6;
+    --mono-bg: #eceee9; --new: #5b4bc4; --new-soft: #e6e2f7; --wk2: #8a6d1f; --wk2-soft: #f4ecd2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #141a1f; --panel: #1c242b; --ink: #e8ebe6; --ink-2: #b4bcc4; --ink-3: #7f8993;
+      --rule: #303a43; --seal: #4fb8b2; --seal-soft: #173634; --flip: #e8814f; --flip-soft: #3d2416;
+      --mono-bg: #232c34; --new: #a89cf0; --new-soft: #2a2545; --wk2: #d9b45a; --wk2-soft: #3a3118;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #141a1f; --panel: #1c242b; --ink: #e8ebe6; --ink-2: #b4bcc4; --ink-3: #7f8993;
+    --rule: #303a43; --seal: #4fb8b2; --seal-soft: #173634; --flip: #e8814f; --flip-soft: #3d2416;
+    --mono-bg: #232c34; --new: #a89cf0; --new-soft: #2a2545; --wk2: #d9b45a; --wk2-soft: #3a3118;
+  }
+  body { background: var(--paper); color: var(--ink); font-family: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif; font-size: 14px; line-height: 1.5; }
+  .book { max-width: 1060px; margin: 0 auto; padding-block: 28px 48px; padding-inline: 20px; display: grid; gap: 30px; }
+  h1, h2, h3, h4 { font-family: "Archivo", "Helvetica Neue", Arial, sans-serif; text-wrap: balance; margin: 0; }
+  h1 { font-size: 40px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.05; }
+  h2 { font-size: 24px; font-weight: 800; letter-spacing: -0.01em; line-height: 1.15; }
+  h3 { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; color: var(--ink-3); }
+  p { margin: 0; }
+  code { font-family: "IBM Plex Mono", Menlo, monospace; font-size: 12.5px; background: var(--mono-bg); padding: 1px 5px; border-radius: 3px; }
+  .kicker { font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--ink-3); letter-spacing: 0.04em; }
+
+  .cover { display: grid; gap: 14px; padding-bottom: 22px; border-bottom: 2px solid var(--ink); }
+  .cover p { max-width: 66ch; font-size: 16px; color: var(--ink-2); }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 12.5px; color: var(--ink-2); align-items: center; }
+  .chip { display: inline-block; font-family: "IBM Plex Mono", monospace; font-size: 10.5px; letter-spacing: 0.05em; padding: 2px 7px; border-radius: 3px; white-space: nowrap; }
+  .have { background: var(--seal-soft); color: var(--seal); }
+  .wk2 { background: var(--wk2-soft); color: var(--wk2); }
+  .new { background: var(--new-soft); color: var(--new); }
+
+  .toc { display: grid; gap: 6px; }
+  .toc ol { margin: 0; padding-left: 0; list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 28px; counter-reset: uc; }
+  .toc li { display: grid; grid-template-columns: 28px 1fr auto; gap: 10px; align-items: baseline; padding: 6px 0; border-bottom: 1px solid var(--rule); font-size: 13.5px; }
+  .toc li::before { counter-increment: uc; content: counter(uc, decimal-leading-zero); font-family: "IBM Plex Mono", monospace; color: var(--ink-3); font-size: 12px; }
+  .toc a { color: var(--ink); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .toc .rank { font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--ink-3); }
+
+  .spread { display: grid; grid-template-columns: 1.05fr 1fr; gap: 26px; padding-top: 22px; border-top: 1px solid var(--rule); }
+  .spread > .fig { display: grid; gap: 10px; align-content: start; }
+  .spread > .txt { display: grid; gap: 14px; align-content: start; }
+  .num { font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--ink-3); }
+  figure { margin: 0; background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 14px; display: grid; gap: 10px; }
+  figure svg { width: 100%; height: auto; max-width: 100%; display: block; color: var(--ink); }
+  figcaption { font-size: 12.5px; color: var(--ink-2); }
+  svg text { font-family: "IBM Plex Mono", Menlo, monospace; font-size: 11px; fill: currentColor; }
+  svg .lbl { font-size: 9.5px; fill: var(--ink-3); }
+  svg .box { fill: var(--panel); stroke: currentColor; stroke-width: 1.1; }
+  svg .rec { fill: var(--seal-soft); stroke: var(--seal); stroke-width: 1.1; }
+  svg .bad { fill: var(--flip-soft); stroke: var(--flip); stroke-width: 1.1; }
+  svg .newb { fill: var(--new-soft); stroke: var(--new); stroke-width: 1.1; stroke-dasharray: 3 2; }
+  svg .edge { stroke: currentColor; stroke-width: 1.1; fill: none; marker-end: url(#a); }
+  svg .edge2 { stroke: var(--ink-3); stroke-width: 1; fill: none; stroke-dasharray: 3 3; }
+  svg .flipt { fill: var(--flip); font-weight: 500; }
+  svg .okt { fill: var(--seal); font-weight: 500; }
+  svg .newt { fill: var(--new); }
+  svg .grid { stroke: var(--rule); stroke-width: 1; }
+
+  .whw { display: grid; gap: 10px; }
+  .whw div { display: grid; grid-template-columns: 52px 1fr; gap: 10px; }
+  .whw b { font-family: "Archivo", sans-serif; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-3); padding-top: 3px; }
+  .whw p { max-width: 52ch; }
+
+  table.cap { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+  table.cap th { text-align: left; font-weight: 600; color: var(--ink-3); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; padding: 0 8px 5px 0; border-bottom: 1px solid var(--rule); }
+  table.cap td { padding: 5px 8px 5px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  table.cap tr:last-child td { border-bottom: 0; }
+  table.cap td:last-child { white-space: nowrap; }
+  .scroll { overflow-x: auto; }
+
+  .roadmap { display: grid; gap: 12px; padding-top: 22px; border-top: 2px solid var(--ink); }
+  .roadmap p { max-width: 70ch; color: var(--ink-2); }
+  table.rm td:nth-child(2) { font-family: "IBM Plex Mono", monospace; font-size: 11.5px; color: var(--ink-2); }
+
+  footer { font-size: 12px; color: var(--ink-3); border-top: 1px solid var(--rule); padding-top: 12px; }
+
+  @media (max-width: 780px) {
+    .spread { grid-template-columns: 1fr; }
+    .toc ol { grid-template-columns: 1fr; }
+    h1 { font-size: 30px; } h2 { font-size: 21px; }
+  }
+  @media print {
+    body { background: #fff; color: #000; }
+    .spread { break-inside: avoid; }
+  }
+</style>
+
+<div class="book">
+
+  <header class="cover">
+    <div class="kicker">SEPTDRIFT · USE-CASE BOOKLET · 2026-09-22 · TEN CASES, RANKED</div>
+    <h1>Ten things you can do with a receipt from before and a receipt from after.</h1>
+    <p>Septdrift records what Apple's on-device model does for your declared cases, chains the records by hash, and diffs two recordings. Each chapter shows the mechanism, says why it matters, how the run works, what comes out, and which capabilities the tool needs to nail the case simply and thoroughly.</p>
+    <div class="legend">
+      <span>Capability status:</span>
+      <span class="chip have">HAVE · v0.3.3</span>
+      <span class="chip wk2">WEEK 2 · deferred or planned</span>
+      <span class="chip new">NEW · not yet designed</span>
+      <span style="color:var(--ink-3)">Ranking follows the 09-22 prediction: strongest cases are those Apple's Evaluations framework does not cover.</span>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <h3>Contents</h3>
+    <ol>
+      <li><a href="#uc1">OS-update regression gate</a><span class="rank">founding case</span></li>
+      <li><a href="#uc2">Backend-swap diff</a><span class="rank">new with the hybrid API</span></li>
+      <li><a href="#uc3">Domain-knowledge triage before RAG</a><span class="rank">first finding</span></li>
+      <li><a href="#uc4">LoRA adapter acceptance</a><span class="rank">adapter toolkit</span></li>
+      <li><a href="#uc5">Fleet variance across chips</a><span class="rank">day 4</span></li>
+      <li><a href="#uc6">Tool-calling and structured-output contracts</a><span class="rank">new model strength</span></li>
+      <li><a href="#uc7">Guardrail and refusal drift</a><span class="rank">typed errors</span></li>
+      <li><a href="#uc8">Token and latency budgets</a><span class="rank">tokenization moved</span></li>
+      <li><a href="#uc9">CI for Foundation Models features</a><span class="rank">fixture mode</span></li>
+      <li><a href="#uc10">Auditable receipts for regulated shipping</a><span class="rank">needs signing</span></li>
+    </ol>
+  </nav>
+
+  <!-- ============ 1 ============ -->
+  <section class="spread" id="uc1">
+    <div class="fig">
+      <div class="num">01 · OS-UPDATE REGRESSION GATE</div>
+      <figure>
+        <svg viewBox="0 0 520 230" role="img" aria-label="The same case file recorded on macOS 27.0 and again on 27.1; the diff pairs the two recordings and marks one check that passed before and fails after as a flip, which is exit code 1.">
+          <defs><marker id="a" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="currentColor"/></marker></defs>
+          <rect class="box" x="10" y="14" width="120" height="44" rx="3"/>
+          <text x="70" y="32" text-anchor="middle">cases/*.yaml</text>
+          <text class="lbl" x="70" y="47" text-anchor="middle">same file, same casesSHA256</text>
+          <path class="edge" d="M130,28 H176 V58"/>
+          <path class="edge" d="M130,44 H176 V126"/>
+          <rect class="box" x="140" y="60" width="72" height="40" rx="3"/>
+          <text x="176" y="77" text-anchor="middle">M4</text><text class="lbl" x="176" y="91" text-anchor="middle">27.0 · 26A428</text>
+          <rect class="box" x="140" y="128" width="72" height="40" rx="3"/>
+          <text x="176" y="145" text-anchor="middle">M4</text><text class="lbl" x="176" y="159" text-anchor="middle">27.1 beta</text>
+          <text class="lbl" x="176" y="118" text-anchor="middle">Software Update</text>
+          <path class="edge" d="M212,80 H254"/><text class="lbl" x="233" y="74" text-anchor="middle">run</text>
+          <path class="edge" d="M212,148 H254"/><text class="lbl" x="233" y="142" text-anchor="middle">run</text>
+          <rect class="rec" x="256" y="62" width="92" height="36" rx="3"/><text x="302" y="84" text-anchor="middle">A: 27.0.jsonl</text>
+          <rect class="rec" x="256" y="130" width="92" height="36" rx="3"/><text x="302" y="152" text-anchor="middle">B: 27.1.jsonl</text>
+          <path class="edge" d="M348,80 H372 V108 H386"/>
+          <path class="edge" d="M348,148 H372 V120 H386"/>
+          <rect class="bad" x="388" y="100" width="44" height="28" rx="3"/><text x="410" y="118" text-anchor="middle">diff</text>
+          <path class="edge" d="M432,114 H452"/>
+          <line class="grid" x1="10" y1="186" x2="510" y2="186"/>
+          <text class="lbl" x="10" y="200">caseID</text><text class="lbl" x="150" y="200">check</text><text class="lbl" x="330" y="200">A</text><text class="lbl" x="380" y="200">B</text><text class="lbl" x="430" y="200">class</text>
+          <text x="10" y="216">afe-with-context</text><text x="150" y="216">contains:Authorization…</text><text x="330" y="216">3/3</text><text x="380" y="216">1/3</text><text class="flipt" x="430" y="216">flip → exit 1</text>
+          <text x="455" y="118" class="flipt">exit 1</text>
+        </svg>
+        <figcaption>One case file, two OS builds, one diff. The scorecard row names the check that moved; the exit code makes it a gate.</figcaption>
+      </figure>
+    </div>
+    <div class="txt">
+      <h2>Know what the update took before your users do.</h2>
+      <div class="whw">
+        <div><b>Why</b><p>Apple states the model changes when a person updates to macOS 27 and tells developers to re-test their prompts. Nothing in your app changed, but answers, formats, and timings can all move. The only signal today is a user report.</p></div>
+        <div><b>How</b><p>Record the case file on the current build before updating. Update, or point the run at a beta machine. Record again. Diff A against B. A check at 100% on A and below 100% on B is a flip.</p></div>
+        <div><b>What</b><p>A scorecard with one row per (case, check), the pass rate on each side, and a class. Headers carry both OS builds and the model asset IDs, so the change is attributed to the model, not guessed. Exit 1 fails the pipeline.</p></div>
+      </div>
+      <h3>Capabilities to nail it</h3>
+      <div class="scroll"><table class="cap">
+        <tr><th>Capability</th><th>Why it matters here</th><th>Status</th></tr>
+        <tr><td>Hash-chained recording with OS build and asset IDs in the header</td><td>The before and after are attributable, not remembered.</td><td><span class="chip have">HAVE</span></td></tr>
+        <tr><td>Diff by check identity with flip / degrade / fix classes and exit 1</td><td>Gate, not report.</td><td><span class="chip have">HAVE</span></td></tr>
+        <tr><td>`repeat` up to 20 with rates per side</td><td>Sampling noise becomes a rate, not a false flip.</td><td><span class="chip have">HAVE</span></td></tr>
+        <tr><td>Baseline pinning: `septdrift diff --baseline` reads the last verified recording for this build from `recordings/`</td><td>Removes the file-picking step from the daily loop.</td><td><span class="chip new">NEW</span></td></tr>
+        <tr><td>Strict receipt typing in `verify`</td><td>A hand-edited or partial file cannot pass as a baseline.</td><td><span class="chip wk2">WEEK 2</span></td></tr>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- ============ 2 ============ -->
+  <section class="spread" id="uc2">
+    <div class="fig">
+      <div class="num">02 · BACKEND-SWAP DIFF</div>
+      <figure>
+        <svg viewBox="0 0 520 236" role="img" aria-label="One case file fans out to three backends behind the Foundation Models session API: on-device 3B, Private Cloud Compute, and a frontier provider. Each yields a recording; pairwise diffs compare pass rates, median wall time, and median output tokens.">
+          <rect class="box" x="10" y="90" width="110" height="44" rx="3"/>
+          <text x="65" y="108" text-anchor="middle">cases/*.yaml</text><text class="lbl" x="65" y="123" text-anchor="middle">one contract</text>
+          <path class="edge" d="M120,104 H150 V40 H176"/>
+          <path class="edge" d="M120,112 H176"/>
+          <path class="edge" d="M120,120 H150 V184 H176"/>
+          <rect class="box" x="178" y="22" width="118" height="36" rx="3"/><text x="237" y="39" text-anchor="middle">on-device 3B</text><text class="lbl" x="237" y="52" text-anchor="middle">SystemLanguageModel</text>
+          <rect class="box" x="178" y="94" width="118" height="36" rx="3"/><text x="237" y="111" text-anchor="middle">Private Cloud</text><text class="lbl" x="237" y="124" text-anchor="middle">PCC · macOS access unverified</text>
+          <rect class="box" x="178" y="166" width="118" height="36" rx="3"/><text x="237" y="183" text-anchor="middle">frontier provider</text><text class="lbl" x="237" y="196" text-anchor="middle">Claude · Gemini via LanguageModel</text>
+          <text class="lbl" x="237" y="222" text-anchor="middle">one session API, three engines</text>
+          <path class="edge" d="M296,40 H326"/><path class="edge" d="M296,112 H326"/><path class="edge" d="M296,184 H326"/>
+          <rect class="rec" x="328" y="24" width="70" height="32" rx="3"/><text x="363" y="44" text-anchor="middle">A.jsonl</text>
+          <rect class="rec" x="328" y="96" width="70" height="32" rx="3"/><text x="363" y="116" text-anchor="middle">B.jsonl</text>
+          <rect class="rec" x="328" y="168" width="70" height="32" rx="3"/><text x="363" y="188" text-anchor="middle">C.jsonl</text>
+          <path class="edge" d="M398,40 H420 V76 H438"/><path class="edge" d="M398,112 H420 V76 H438"/>
+          <path class="edge" d="M398,184 H420 V148 H438"/><path class="edge2" d="M398,120 H420 V148 H438"/>
+          <rect class="bad" x="440" y="62" width="44" height="28" rx="3"/><text x="462" y="80" text-anchor="middle">diff</text>
+          <rect class="bad" x="440" y="134" width="44" height="28" rx="3"/><text x="462" y="152" text-anchor="middle">diff</text>
+          <text class="lbl" x="492" y="72">pass</text><text class="lbl" x="492" y="84">ms</text><text class="lbl" x="492" y="150">tok</text>
+        </svg>
+        <figcaption>The same declared contract through three engines. The diff answers which checks each engine passes and what it costs in time and tokens.</figcaption>
+      </figure>
+    </div>
+    <div class="txt">
+      <h2>Pick the engine with evidence, then keep it honest.</h2>
+      <div class="whw">
+        <div><b>Why</b><p>macOS 27 puts on-device, Private Cloud Compute, and third-party frontier models behind one session API. The choice is now a config flag, and a flag is easy to flip without measuring. Cost, latency, and refusal behavior differ by engine for the same prompt.</p></div>
+        <div><b>How</b><p>Run the case file once per backend. Diff any pair. The header names the backend; the scorecard carries pass rates and per-side medians of wall time and output tokens. Request drift is refused unless allowed, so an engine that needs a different prompt is caught, not hidden.</p></div>
+        <div><b>What</b><p>A per-check comparison across engines, a medians line per side, and an error-kind count per side. Enough to choose, and enough to re-run after either engine updates.</p></div>
+      </div>
+      <h3>Capabilities to nail it</h3>
+      <div class="scroll"><table class="cap">
+        <tr><th>Capability</th><th>Why it matters here</th><th>Status</th></tr>
+        <tr><td>`Backend` protocol with `system` and `fixture` implementations</td><td>The seam exists; engines plug in behind it.</td><td><span class="chip have">HAVE</span></td></tr>
+        <tr><td>PCC and provider backends through the `LanguageModel` protocol</td><td>The case needs the engines. PCC access on macOS is unverified.</td><td><span class="chip wk2">WEEK 2</span></td></tr>
+        <tr><td>Cost per record: provider price or PCC quota, recorded not estimated</td><td>Engine choice is a cost decision as much as a quality one.</td><td><span class="chip new">NEW</span></td></tr>
+        <tr><td>N-way scorecard (`diff a b c`)</td><td>Three pairwise diffs is the workaround; one table is the product.</td><td><span class="chip new">NEW</span></td></tr>
+        <tr><td>Per-side medians and error-kind counts</td><td>Latency and refusal behavior differ by engine.</td><td><span class="chip have">HAVE</span></td></tr>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- ============ 3 ============ -->
+  <section class="spread" id="uc3">
+    <div class="fig">
+      <div class="num">03 · DOMAIN-KNOWLEDGE TRIAGE BEFORE RAG</div>
+      <figure>
+        <svg viewBox="0 0 520 220" role="img" aria-label="Two cases with the same question. Without context the 3B model invents an expansion of AFE and the contains check fails. With the definition supplied in context and the prompt asking for it back, the check passes three of three. The term becomes a declared check that survives model updates.">
+          <rect class="box" x="10" y="16" width="150" height="56" rx="3"/>
+          <text x="85" y="36" text-anchor="middle">afe-no-context</text>
+          <text class="lbl" x="85" y="50" text-anchor="middle">"what is an AFE in oil and gas?"</text>
+          <text class="lbl" x="85" y="63" text-anchor="middle">instructions only</text>
+          <rect class="box" x="10" y="132" width="150" height="70" rx="3"/>
+          <text x="85" y="152" text-anchor="middle">afe-with-context</text>
+          <text class="lbl" x="85" y="166" text-anchor="middle">context: AFE = Authorization for</text>
+          <text class="lbl" x="85" y="178" text-anchor="middle">Expenditure: the operator's request…</text>
+          <text class="lbl" x="85" y="192" text-anchor="middle">"spell out the acronym as the context does"</text>
+          <path class="edge" d="M160,44 H214"/><path class="edge" d="M160,167 H214"/>
+          <rect class="box" x="216" y="22" width="70" height="44" rx="22"/><text x="251" y="41" text-anchor="middle">3B</text><text class="lbl" x="251" y="55" text-anchor="middle">no trade words</text>
+          <rect class="box" x="216" y="145" width="70" height="44" rx="22"/><text x="251" y="164" text-anchor="middle">3B</text><text class="lbl" x="251" y="178" text-anchor="middle">reads context</text>
+          <path class="edge" d="M286,44 H334"/><path class="edge" d="M286,167 H334"/>
+          <rect class="bad" x="336" y="10" width="174" height="66" rx="3"/>
+          <text x="344" y="28">"Accommodation Fee Estimate"</text>
+          <text x="344" y="42">"Approval Fee Estimate"</text>
+          <text x="344" y="56">"Allowance for Field Expenses"</text>
+          <text class="flipt" x="344" y="70">contains: … 0/3</text>
+          <rect class="rec" x="336" y="140" width="174" height="54" rx="3"/>
+          <text x="344" y="160">"AFE stands for Authorization</text>
+          <text x="344" y="174">for Expenditure, which is…"</text>
+          <text class="okt" x="344" y="188">contains: … 3/3</text>
+          <path class="edge2" d="M423,76 V140"/>
+          <text class="lbl" x="430" y="112">the fix is one sentence</text>
+          <text class="lbl" x="430" y="124">and one declared check</text>
+        </svg>
+        <figcaption>Three runs, three invented expansions, none right. With the definition in context and an explicit ask, three of three. The check outlives the model.</figcaption>
+      </figure>
+    </div>
+    <div class="txt">
+      <h2>Find out which words the model does not know before you build retrieval.</h2>
+      <div class="whw">
+        <div><b>Why</b><p>A 3B distilled model has no room for a trade's vocabulary. It answers fluently and wrong. Retrieval is not optional, but nobody knows which terms need it until they measure. Guessing over-builds the RAG layer or ships a hallucination.</p></div>
+        <div><b>How</b><p>For each domain term, declare a pair: the bare question, and the same question with the definition in `context` and a prompt that asks for the term back. Run with `repeat: 10`. The pair's pass rates say whether the term must ride in the prompt.</p></div>
+        <div><b>What</b><p>A ranked list of terms by bare-prompt failure rate, each with a passing with-context prompt already written. Every passing prompt is a declared check, so the next model update tells you whether the fix still holds.</p></div>
+      </div>
+      <h3>Capabilities to nail it</h3>
+      <div class="scroll"><table class="cap">
+        <tr><th>Capability</th><th>Why it matters here</th><th>Status</th></tr>
+        <tr><td>`context`, `instructions`, `contains`, `repeat`</td><td>The pair pattern needs nothing else.</td><td><span class="chip have">HAVE</span></td></tr>
+        <tr><td>Term-pair generator: `septdrift pairs terms.csv` writes the two cases per term</td><td>Fifty terms by hand is the reason people skip this.</td><td><span class="chip new">NEW</span></td></tr>
+        <tr><td>Label sets: `contains_any` of accepted spellings</td><td>"Authorization for Expenditure" and "authorization for expenditure" are the same answer.</td><td><span class="chip wk2">WEEK 2</span></td></tr>
+        <tr><td>A rate-only report mode (no diff, one recording)</td><td>Triage is a single recording read as a table, not a comparison.</td><td><span class="chip new">NEW</span></td></tr>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- ============ 4 ============ -->
+  <section class="spread" id="uc4">
+    <div class="fig">
+      <div class="num">04 · LORA ADAPTER ACCEPTANCE</div>
+      <figure>
+        <svg viewBox="0 0 520 226" role="img" aria-label="Three recordings: base model on 27.0, adapter on 27.0, adapter on 27.1. Two diffs answer two questions: does the adapter help, and does the adapter survive the OS update.">
+          <rect class="box" x="10" y="20" width="100" height="40" rx="3"/><text x="60" y="37" text-anchor="middle">base 3B</text><text class="lbl" x="60" y="52" text-anchor="middle">27.0</text>
+          <rect class="newb" x="10" y="94" width="100" height="40" rx="3"/><text x="60" y="111" text-anchor="middle">base + adapter</text><text class="lbl" x="60" y="126" text-anchor="middle">27.0 · LoRA v3</text>
+          <rect class="newb" x="10" y="168" width="100" height="40" rx="3"/><text x="60" y="185" text-anchor="middle">base + adapter</text><text class="lbl" x="60" y="200" text-anchor="middle">27.1 · same LoRA v3</text>
+          <path class="edge" d="M110,40 H156"/><path class="edge" d="M110,114 H156"/><path class="edge" d="M110,188 H156"/>
+          <rect class="rec" x="158" y="24" width="120" height="32" rx="3"/><text x="218" y="44" text-anchor="middle">A: base-27.0</text>
+          <rect class="rec" x="158" y="98" width="120" height="32" rx="3"/><text x="218" y="118" text-anchor="middle">B: lora3-27.0</text>
+          <rect class="rec" x="158" y="172" width="120" height="32" rx="3"/><text x="218" y="192" text-anchor="middle">C: lora3-27.1</text>
+          <path class="edge" d="M278,40 H306 V70 H326"/><path class="edge" d="M278,114 H306 V84 H326"/>
+          <path class="edge" d="M278,122 H306 V158 H326"/><path class="edge" d="M278,188 H306 V172 H326"/>
+          <rect class="bad" x="328" y="62" width="44" height="28" rx="3"/><text x="350" y="80" text-anchor="middle">diff</text>
+          <rect class="bad" x="328" y="150" width="44" height="28" rx="3"/><text x="350" y="168" text-anchor="middle">diff</text>
+          <text x="382" y="70">A → B: adapter gain</text><text class="lbl" x="382" y="84">fixes &gt; 0, flips = 0 wanted</text>
+          <text x="382" y="158">B → C: survives update?</text><text class="lbl" x="382" y="172">flips = 0, or retrain</text>
+          <text class="lbl" x="382" y="200">adapter id in the header</text>
+          <text class="lbl" x="382" y="212">so C is never mistaken for B</text>
+        </svg>
+        <figcaption>An adapter is a model change like any other. Two diffs: the gain against base, and the survival across the OS update.</figcaption>
+      </figure>
+    </div>
+    <div class="txt">
+      <h2>Accept an adapter the way you accept a build.</h2>
+      <div class="whw">
+        <div><b>Why</b><p>Apple's adapter toolkit trains LoRA adapters offline on a Mac. An adapter is tied to a base model version; when the OS replaces the base, the adapter's behavior can move or the adapter can stop loading. Teams need the gain measured once and the survival measured at every update.</p></div>
+        <div><b>How</b><p>Record base and base-plus-adapter on the same build; diff for gain and for regressions on cases the adapter was not trained for. After the update, record the adapter again and diff against its own pre-update recording.</p></div>
+        <div><b>What</b><p>Two scorecards. The first justifies shipping the adapter. The second is the retrain trigger. Both name the adapter identifier alongside the base asset IDs.</p></div>
+      </div>
+      <h3>Capabilities to nail it</h3>
+      <div class="scroll"><table class="cap">
+        <tr><th>Capability</th><th>Why it matters here</th><th>Status</th></tr>
+        <tr><td>`--adapter <path>` on the system backend, adapter id in the header and requestSHA256</td><td>Without it, B and C are indistinguishable from base recordings.</td><td><span class="chip new">NEW</span></td></tr>
+        <tr><td>`--fail-on-fix` inverse: `--require-fix` for the gain diff</td><td>Acceptance means "must improve", not "must not regress".</td><td><span class="chip new">NEW</span></td></tr>
+        <tr><td>Held-out cases tagged `holdout: true`, reported separately</td><td>Regression on untrained cases is the adapter's real risk.</td><td><span class="chip new">NEW</span></td></tr>
+        <tr><td>Flip / fix classes, request-drift refusal</td><td>The diff semantics already fit.</td><td><span class="chip have">HAVE</span></td></tr>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- ============ 5 ============ -->
+  <section class="spread" id="uc5">
+    <div class="fig">
+      <div class="num">05 · FLEET VARIANCE ACROSS CHIPS</div>
+      <figure>
+        <svg viewBox="0 0 520 226" role="img" aria-label="Three Macs on different chips each record the same cases. Each header carries chip, OS build, and model asset IDs. The diff reads the asset IDs first: same IDs on both sides means a flip is chip or sampling; different IDs means the model itself changed.">
+          <rect class="box" x="10" y="18" width="92" height="44" rx="3"/><text x="56" y="36" text-anchor="middle">M1 mini</text><text class="lbl" x="56" y="50" text-anchor="middle">27.0 · second Mac</text>
+          <rect class="box" x="10" y="92" width="92" height="44" rx="3"/><text x="56" y="110" text-anchor="middle">M4 Air</text><text class="lbl" x="56" y="124" text-anchor="middle">27.0 · Frank</text>
+          <rect class="box" x="10" y="166" width="92" height="44" rx="3"/><text x="56" y="184" text-anchor="middle">M3 Pro</text><text class="lbl" x="56" y="198" text-anchor="middle">27.0 · fleet</text>
+          <path class="edge" d="M102,40 H134"/><path class="edge" d="M102,114 H134"/><path class="edge" d="M102,188 H134"/>
+          <rect class="rec" x="136" y="14" width="150" height="52" rx="3"/>
+          <text x="144" y="30">host: {chip, osBuild, name}</text><text x="144" y="44">assetIDs: [instruct_3b…]</text><text class="lbl" x="144" y="58">recording-m1-….jsonl</text>
+          <rect class="rec" x="136" y="88" width="150" height="52" rx="3"/>
+          <text x="144" y="104">host: {chip, osBuild, name}</text><text x="144" y="118">assetIDs: [instruct_3b…]</text><text class="lbl" x="144" y="132">recording-m4-….jsonl</text>
+          <rect class="rec" x="136" y="162" width="150" height="52" rx="3"/>
+          <text x="144" y="178">host: {chip, osBuild, name}</text><text x="144" y="192">assetIDs: [instruct_3b…]</text><text class="lbl" x="144" y="206">recording-m3-….jsonl</text>
+          <path class="edge" d="M286,40 H312 V100 H332"/><path class="edge" d="M286,114 H332"/><path class="edge" d="M286,188 H312 V128 H332"/>
+          <rect class="bad" x="334" y="100" width="44" height="28" rx="3"/><text x="356" y="118" text-anchor="middle">diff</text>
+          <path class="edge" d="M378,114 H396"/>
+          <rect class="box" x="398" y="96" width="112" height="36" rx="3"/><text x="454" y="112" text-anchor="middle">asset IDs equal?</text><text class="lbl" x="454" y="126" text-anchor="middle">read the headers first</text>
+          <path class="edge" d="M430,132 V160"/><path class="edge" d="M478,132 V160"/>
+          <text x="404" y="176">yes → chip</text><text class="lbl" x="404" y="188">or sampling</text>
+          <text class="flipt" x="466" y="176">no → model</text><text class="lbl" x="466" y="188">drift key works</text>
+        </svg>
+        <figcaption>Same build, three chips. The asset IDs in the header decide whether a flip is the model or the machine.</figcaption>
+      </figure>
+    </div>
+    <div class="txt">
+      <h2>Separate the model from the machine.</h2>
+      <div class="whw">
+        <div><b>Why</b><p>A feature tested on the developer's M4 ships to M1 laptops in the field. Quantization and scheduling differ by chip; sampling adds noise. A support ticket cannot tell you which one bit. Enterprise Mac fleets on mixed hardware need the attribution, not the anecdote.</p></div>
+        <div><b>How</b><p>Ship the tarball. Each Mac runs `mini-run.sh`, which builds, runs, verifies, and leaves one stamped recording on the Desktop. Collect the files and diff any pair. Read the two `side` lines before the table.</p></div>
+        <div><b>What</b><p>A diff whose header names chip, OS build, and asset IDs on both sides, and a rule for reading it: equal asset IDs means the flip is chip or sampling; different IDs means the model changed.</p></div>
+      </div>
+      <h3>Capabilities to nail it</h3>
+      <div class="scroll"><table class="cap">
+        <tr><th>Capability</th><th>Why it matters here</th><th>Status</th></tr>
+        <tr><td>Host header with chip, build, hostname; `--no-hostname` for privacy</td><td>Attribution lives in the header.</td><td><span class="chip have">HAVE</span></td></tr>
+        <tr><td>`pack.sh` and `mini-run.sh` one-file transfer, build gate, stamped output</td><td>A non-developer can run it and send back one file.</td><td><span class="chip have">HAVE</span></td></tr>
+        <tr><td>Fleet collector: `septdrift collect dir/` builds an N-way table by chip</td><td>Ten Macs is forty-five pairwise diffs by hand.</td><td><span class="chip new">NEW</span></td></tr>
+        <tr><td>Sampling floor: run `repeat: 10` on one machine to measure noise before blaming a chip</td><td>Needs only a documented recipe, not code.</td><td><span class="chip have">HAVE</span></td></tr>
+        <tr><td>Signed recordings so a fleet file's origin is provable</td><td>Optional here; required in chapter 10.</td><td><span class="chip new">NEW</span></td></tr>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- ============ 6 ============ -->
+  <section class="spread" id="uc6">
+    <div class="fig">
+      <div class="num">06 · TOOL-CALLING AND STRUCTURED-OUTPUT CONTRACTS</div>
+      <figure>
+        <svg viewBox="0 0 520 226" role="img" aria-label="A JSON-format case with an ordered schema goes through guided generation; the output object is checked field by field, typed by the schema. A tool-enabled case records which tool the model called and with what arguments, checked the same way.">
+          <rect class="box" x="10" y="14" width="140" height="64" rx="3"/>
+          <text x="18" y="32">format: json</text>
+          <text class="lbl" x="18" y="46">schema: kind string,</text>
+          <text class="lbl" x="18" y="58">count int, approved bool</text>
+          <text class="lbl" x="18" y="71">(ordered)</text>
+          <path class="edge" d="M150,46 H194"/>
+          <rect class="box" x="196" y="26" width="90" height="40" rx="20"/><text x="241" y="43" text-anchor="middle">3B</text><text class="lbl" x="241" y="58" text-anchor="middle">guided generation</text>
+          <path class="edge" d="M286,46 H330"/>
+          <rect class="rec" x="332" y="14" width="178" height="64" rx="3"/>
+          <text x="340" y="32">{"kind":"request",</text>
+          <text x="340" y="46"> "count":3,</text>
+          <text x="340" y="60"> "approved":true}</text>
+          <text class="okt" x="340" y="74">json_field_equals ×3 typed</text>
+          <rect class="box" x="10" y="132" width="140" height="64" rx="3"/>
+          <text x="18" y="150">tools: [lookup_afe]</text>
+          <text class="lbl" x="18" y="164">prompt: "what did we</text>
+          <text class="lbl" x="18" y="176">approve on AFE 4471?"</text>
+          <text class="lbl newt" x="18" y="190">tool_called check · NEW</text>
+          <path class="edge" d="M150,164 H194"/>
+          <rect class="box" x="196" y="144" width="90" height="40" rx="20"/><text x="241" y="161" text-anchor="middle">3B</text><text class="lbl" x="241" y="176" text-anchor="middle">ToolCallingMode</text>
+          <path class="edge" d="M286,164 H330"/>
+          <rect class="newb" x="332" y="132" width="178" height="64" rx="3"/>
+          <text x="340" y="150">toolCalls: [{name:</text>
+          <text x="340" y="164"> "lookup_afe", args:</text>
+          <text x="340" y="178"> {id:"4471"}}]</text>
+          <text class="newt" x="340" y="192">tool_called: lookup_afe(id=4471)</text>
+          <text class="lbl" x="260" y="216" text-anchor="middle">27.0 changed tool-call formatting; the contract catches the next change</text>
+        </svg>
+        <figcaption>Structured output is checked field by field, typed by the schema. Tool calls need the same treatment: record the call, declare the expectation.</figcaption>
+      </figure>
+    </div>
+    <div class="txt">
+      <h2>Make the schema and the tool call a contract the update cannot break silently.</h2>
+      <div class="whw">
+        <div><b>Why</b><p>The 27.0 model is rebuilt with better tool calling, and tool-call formatting changed with it. Apps that parse the model's output, or dispatch on its tool calls, break in ways that unit tests of the app cannot see because the model is not in the test.</p></div>
+        <div><b>How</b><p>Declare `format: json` with an ordered schema and one `json_field_equals` per load-bearing field. For tools, declare the tool set and the expected call with its arguments. Record; diff after each update.</p></div>
+        <div><b>What</b><p>A row per field and per expected call. A type change, a renamed field, or a missed tool call is a flip with a reason string, for example `expected 3 got "3"`.</p></div>
+      </div>
+      <h3>Capabilities to nail it</h3>
+      <div class="scroll"><table class="cap">
+        <tr><th>Capability</th><th>Why it matters here</th><th>Status</th></tr>
+        <tr><td>Ordered schema, guided generation, typed `json_field_equals`</td><td>The structured half is done.</td><td><span class="chip have">HAVE</span></td></tr>
+        <tr><td>Tool declarations in the case; `toolCalls` on the result record</td><td>The tool half needs the record before the check.</td><td><span class="chip new">NEW</span></td></tr>
+        <tr><td>`tool_called` and `tool_not_called` checks, args compared typed</td><td>Dispatch correctness is the contract.</td><td><span class="chip new">NEW</span></td></tr>
+        <tr><td>Type-mismatch reason names the type; exact integer rule</td><td>The reason string is what the developer reads.</td><td><span class="chip wk2">WEEK 2</span></td></tr>
+        <tr><td>Optional fields and nested objects in the schema</td><td>Real payloads are not flat.</td><td><span class="chip wk2">WEEK 2</span></td></tr>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- ============ 7 ============ -->
+  <section class="spread" id="uc7">
+    <div class="fig">
+      <div class="num">07 · GUARDRAIL AND REFUSAL DRIFT</div>
+      <figure>
+        <svg viewBox="0 0 520 210" role="img" aria-label="A benign prompt run ten times on each build. On 27.0 all ten answer. On 27.1 three of ten return a guardrail error. The typed error kinds make refusal a rate per case, and the no-error expectation flips.">
+          <text x="10" y="22">prompt: "summarize this invoice dispute"</text><text class="lbl" x="10" y="36">repeat: 10 · expect no error</text>
+          <text class="lbl" x="10" y="68">A · 27.0</text>
+          <g>
+            <rect class="rec" x="70" y="56" width="18" height="18" rx="2"/><rect class="rec" x="92" y="56" width="18" height="18" rx="2"/><rect class="rec" x="114" y="56" width="18" height="18" rx="2"/><rect class="rec" x="136" y="56" width="18" height="18" rx="2"/><rect class="rec" x="158" y="56" width="18" height="18" rx="2"/>
+            <rect class="rec" x="180" y="56" width="18" height="18" rx="2"/><rect class="rec" x="202" y="56" width="18" height="18" rx="2"/><rect class="rec" x="224" y="56" width="18" height="18" rx="2"/><rect class="rec" x="246" y="56" width="18" height="18" rx="2"/><rect class="rec" x="268" y="56" width="18" height="18" rx="2"/>
+          </g>
+          <text class="okt" x="296" y="70">10/10 answered</text>
+          <text class="lbl" x="10" y="108">B · 27.1</text>
+          <g>
+            <rect class="rec" x="70" y="96" width="18" height="18" rx="2"/><rect class="rec" x="92" y="96" width="18" height="18" rx="2"/><rect class="bad" x="114" y="96" width="18" height="18" rx="2"/><rect class="rec" x="136" y="96" width="18" height="18" rx="2"/><rect class="rec" x="158" y="96" width="18" height="18" rx="2"/>
+            <rect class="bad" x="180" y="96" width="18" height="18" rx="2"/><rect class="rec" x="202" y="96" width="18" height="18" rx="2"/><rect class="rec" x="224" y="96" width="18" height="18" rx="2"/><rect class="bad" x="246" y="96" width="18" height="18" rx="2"/><rect class="rec" x="268" y="96" width="18" height="18" rx="2"/>
+          </g>
+          <text class="flipt" x="296" y="110">7/10 · 3 guardrail</text>
+          <line class="grid" x1="10" y1="132" x2="510" y2="132"/>
+          <text class="lbl" x="10" y="150">error kinds per side (typed from LanguageModelError):</text>
+          <text x="10" y="168">A: –</text>
+          <text x="10" y="186">B: guardrail=3</text>
+          <text x="200" y="168">check</text><text x="330" y="168">A</text><text x="380" y="168">B</text><text x="430" y="168">class</text>
+          <text x="200" y="186">no_error</text><text x="330" y="186">1.00</text><text x="380" y="186">0.70</text><text class="flipt" x="430" y="186">flip</text>
+          <text class="lbl" x="200" y="202">refusal-in-prose is a not_contains check, never an error</text>
+        </svg>
+        <figcaption>Refusal is a rate, not an anecdote. Typed error kinds per side show what kind of refusal and how often.</figcaption>
+      </figure>
+    </div>
+    <div class="txt">
+      <h2>Catch the prompt that starts tripping the guardrail.</h2>
+      <div class="whw">
+        <div><b>Why</b><p>Each model update retrains safety behavior. A prompt that was fine can begin returning a guardrail error, or a refusal in prose, or an unsupported-language error for a locale you ship. These arrive as support tickets with no reproduction.</p></div>
+        <div><b>How</b><p>Run the prompts that matter with `repeat: 10`. Errors are typed on the record from `LanguageModelError`. Declare `expect_error` where a refusal is correct and a no-error expectation where it is not. Diff after the update.</p></div>
+        <div><b>What</b><p>Error-kind counts per side, a rate per case, and a flip when a prompt starts failing. For refusals in prose, a `not_contains` check on the phrasing the model uses.</p></div>
+      </div>
+      <h3>Capabilities to nail it</h3>
+      <div class="scroll"><table class="cap">
+        <tr><th>Capability</th><th>Why it matters here</th><th>Status</th></tr>
+        <tr><td>Typed `ErrorKind`, `LanguageModelError` mapping, error-kind counts per side</td><td>The record already knows what kind of refusal.</td><td><span class="chip have">HAVE</span></td></tr>
+        <tr><td>`expect_error` check</td><td>Covers the "should refuse" direction.</td><td><span class="chip have">HAVE</span></td></tr>
+        <tr><td>`no_error` check as a first-class declaration</td><td>Today it is implicit through other checks failing "error"; an explicit check reads better in the scorecard.</td><td><span class="chip new">NEW</span></td></tr>
+        <tr><td>Semantic refusal detection (prose refusals)</td><td>Deferred on purpose; `not_contains` on known phrasings is the v0.3 answer.</td><td><span class="chip wk2">WEEK 2</span></td></tr>
+        <tr><td>Locale as a case option and in requestSHA256</td><td>Unsupported-language errors are locale-specific.</td><td><span class="chip new">NEW</span></td></tr>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- ============ 8 ============ -->
+  <section class="spread" id="uc8">
+    <div class="fig">
+      <div class="num">08 · TOKEN AND LATENCY BUDGETS</div>
+      <figure>
+        <svg viewBox="0 0 520 220" role="img" aria-label="Wall time per rep for one case on two builds against the declared 3000 millisecond limit. On 27.0 all reps sit under the line; on 27.1 the median rises and two reps cross it. Beside it, output tokens per side against a 40-token limit.">
+          <text class="lbl" x="10" y="16">wallMs per rep · max_wall_ms: 3000</text>
+          <line class="grid" x1="40" y1="30" x2="40" y2="150"/><line class="grid" x1="40" y1="150" x2="300" y2="150"/>
+          <text class="lbl" x="12" y="66">3000</text><line x1="40" y1="62" x2="300" y2="62" stroke="var(--flip)" stroke-width="1" stroke-dasharray="4 3"/>
+          <text class="lbl" x="12" y="150">0</text>
+          <rect class="rec" x="60" y="112" width="14" height="38"/><rect class="rec" x="78" y="104" width="14" height="46"/><rect class="rec" x="96" y="118" width="14" height="32"/><rect class="rec" x="114" y="108" width="14" height="42"/><rect class="rec" x="132" y="100" width="14" height="50"/>
+          <text class="lbl" x="99" y="166" text-anchor="middle">A · 27.0 · median 1.4 s</text>
+          <rect class="rec" x="176" y="86" width="14" height="64"/><rect class="bad" x="194" y="52" width="14" height="98"/><rect class="rec" x="212" y="78" width="14" height="72"/><rect class="bad" x="230" y="46" width="14" height="104"/><rect class="rec" x="248" y="82" width="14" height="68"/>
+          <text class="lbl" x="219" y="166" text-anchor="middle">B · 27.1 · median 2.3 s</text>
+          <text class="flipt" x="60" y="190">max_wall_ms:3000  5/5 → 3/5  flip</text>
+          <text class="lbl" x="330" y="16">tokensOut · max_output_tokens: 40</text>
+          <line class="grid" x1="360" y1="30" x2="360" y2="150"/><line class="grid" x1="360" y1="150" x2="510" y2="150"/>
+          <text class="lbl" x="334" y="86">40</text><line x1="360" y1="82" x2="510" y2="82" stroke="var(--flip)" stroke-width="1" stroke-dasharray="4 3"/>
+          <rect class="rec" x="380" y="96" width="40" height="54"/><text class="lbl" x="400" y="166" text-anchor="middle">A · 32</text>
+          <rect class="rec" x="450" y="92" width="40" height="58"/><text class="lbl" x="470" y="166" text-anchor="middle">B · 34</text>
+          <text class="okt" x="330" y="190">max_output_tokens:40  unchanged</text>
+          <text class="lbl" x="10" y="212">tokenization changed with the new model; hard-coded context sizes regress quality (Apple guidance)</text>
+        </svg>
+        <figcaption>Latency and tokens are checks with limits, not dashboards. The rep bars show the noise; the medians per side show the shift.</figcaption>
+      </figure>
+    </div>
+    <div class="txt">
+      <h2>Budget the update, not just its accuracy.</h2>
+      <div class="whw">
+        <div><b>Why</b><p>Tokenization and token counts moved with the 27.0 model, and Apple warns against hard-coded context numbers. A feature with a latency budget or a context budget can regress with every answer still correct. Accuracy evals do not see it.</p></div>
+        <div><b>How</b><p>Declare `max_wall_ms` and `max_output_tokens` on the cases that carry a budget. Use `repeat` so a rate absorbs the noise. Record before and after; the medians per side show the shift, the rate shows the breach.</p></div>
+        <div><b>What</b><p>Per-side medians of wall time and output tokens over non-error results, and a flip when a budget check drops below 100%. Cached and reasoning tokens are on every record for the next question.</p></div>
+      </div>
+      <h3>Capabilities to nail it</h3>
+      <div class="scroll"><table class="cap">
+        <tr><th>Capability</th><th>Why it matters here</th><th>Status</th></tr>
+        <tr><td>`max_wall_ms`, `max_output_tokens`, four token counts per record, medians per side</td><td>The budget checks exist.</td><td><span class="chip have">HAVE</span></td></tr>
+        <tr><td>Numeric tolerances: `max_wall_ms: {p50: 1500, p95: 3000}`</td><td>A single ceiling is either too loose or noisy; percentiles match how budgets are written.</td><td><span class="chip wk2">WEEK 2</span></td></tr>
+        <tr><td>`max_input_tokens` and a context-size probe recorded in the header</td><td>The input side moved too; the model's context size is queryable and should be on the record.</td><td><span class="chip new">NEW</span></td></tr>
+        <tr><td>Warm-up policy declared (first rep excluded or not)</td><td>Model load skews the first wall time; the spec says no prewarm, the case should be able to say otherwise.</td><td><span class="chip new">NEW</span></td></tr>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- ============ 9 ============ -->
+  <section class="spread" id="uc9">
+    <div class="fig">
+      <div class="num">09 · CI FOR FOUNDATION MODELS FEATURES</div>
+      <figure>
+        <svg viewBox="0 0 520 226" role="img" aria-label="Two lanes. The CI lane runs on a machine without Apple Intelligence: the fixture backend replays canned answers, the recording verifies, and the diff against the committed baseline gates the merge. The live lane runs on a Mac with the model and produces receipts that are committed as the next fixture.">
+          <text class="lbl" x="10" y="18">CI lane · no model · every push</text>
+          <rect class="box" x="10" y="26" width="72" height="34" rx="3"/><text x="46" y="47" text-anchor="middle">git push</text>
+          <path class="edge" d="M82,43 H108"/>
+          <rect class="box" x="110" y="26" width="92" height="34" rx="3"/><text x="156" y="41" text-anchor="middle">runner</text><text class="lbl" x="156" y="54" text-anchor="middle">Linux or Mac, no AI</text>
+          <path class="edge" d="M202,43 H228"/>
+          <rect class="box" x="230" y="26" width="96" height="34" rx="3"/><text x="278" y="41" text-anchor="middle">run --backend</text><text class="lbl" x="278" y="54" text-anchor="middle">fixture</text>
+          <path class="edge" d="M326,43 H352"/>
+          <rect class="rec" x="354" y="26" width="60" height="34" rx="3"/><text x="384" y="47" text-anchor="middle">verify</text>
+          <path class="edge" d="M414,43 H440"/>
+          <rect class="bad" x="442" y="26" width="68" height="34" rx="3"/><text x="476" y="41" text-anchor="middle">diff vs</text><text class="lbl" x="476" y="54" text-anchor="middle">baseline.jsonl</text>
+          <text class="okt" x="442" y="78">exit 0 → merge</text><text class="flipt" x="442" y="92">exit 1 → block</text>
+          <line class="grid" x1="10" y1="108" x2="510" y2="108"/>
+          <text class="lbl" x="10" y="128">Live lane · a Mac with the model · nightly or per OS build</text>
+          <rect class="box" x="10" y="136" width="92" height="34" rx="3"/><text x="56" y="151" text-anchor="middle">Mac runner</text><text class="lbl" x="56" y="164" text-anchor="middle">Apple Intelligence on</text>
+          <path class="edge" d="M102,153 H128"/>
+          <rect class="box" x="130" y="136" width="96" height="34" rx="3"/><text x="178" y="151" text-anchor="middle">run --backend</text><text class="lbl" x="178" y="164" text-anchor="middle">system</text>
+          <path class="edge" d="M226,153 H252"/>
+          <rect class="rec" x="254" y="136" width="110" height="34" rx="3"/><text x="309" y="151" text-anchor="middle">recording.jsonl</text><text class="lbl" x="309" y="164" text-anchor="middle">receipt, not a test</text>
+          <path class="edge" d="M364,153 H390"/>
+          <rect class="box" x="392" y="136" width="118" height="34" rx="3"/><text x="451" y="151" text-anchor="middle">promote → fixture</text><text class="lbl" x="451" y="164" text-anchor="middle">commit as next baseline</text>
+          <path class="edge2" d="M451,170 V196 H476 V60"/>
+          <text class="lbl" x="10" y="200">the live recording becomes the CI fixture; the CI diff then asks "did the app change what it sends?"</text>
+          <text class="lbl" x="10" y="214">while the live diff asks "did the model change what it answers?"</text>
+        </svg>
+        <figcaption>Two lanes, one case file. CI replays fixtures and never calls the model; the live lane produces receipts that get promoted to fixtures.</figcaption>
+      </figure>
+    </div>
+    <div class="txt">
+      <h2>Put the model's contract in the pipeline without putting the model in the pipeline.</h2>
+      <div class="whw">
+        <div><b>Why</b><p>CI runners rarely have Apple Intelligence. Teams either skip model tests or run flaky live ones. Frontier practice is now continuous testing on every model update before real work moves to it; Mac developers have no native shape for that.</p></div>
+        <div><b>How</b><p>Commit the case file and a fixture recording. CI runs the fixture backend, verifies, and diffs against the committed baseline; a change in what the app sends (prompt, schema, options) shows as request drift. A Mac lane records live and promotes the recording to the next fixture.</p></div>
+        <div><b>What</b><p>A merge gate that fails when the app changes the contract, and a live receipt stream that fails when the model does. The two lanes answer different questions on purpose.</p></div>
+      </div>
+      <h3>Capabilities to nail it</h3>
+      <div class="scroll"><table class="cap">
+        <tr><th>Capability</th><th>Why it matters here</th><th>Status</th></tr>
+        <tr><td>Fixture backend, deterministic; tests with zero model calls</td><td>The CI lane runs today.</td><td><span class="chip have">HAVE</span></td></tr>
+        <tr><td>`septdrift promote recording.jsonl --to fixtures/`</td><td>Turning a live recording into a fixture file is a manual rewrite today.</td><td><span class="chip new">NEW</span></td></tr>
+        <tr><td>Linux build of the fixture path</td><td>Most runners are Linux; the framework's open-source move makes it plausible. Unverified.</td><td><span class="chip new">NEW</span></td></tr>
+        <tr><td>GitHub Actions example and a `--json` consumer</td><td>Adoption is a copy-paste away or it does not happen.</td><td><span class="chip new">NEW</span></td></tr>
+        <tr><td>Request-drift detection through casesSHA256 and requestSHA256</td><td>The "did the app change" question is already answered.</td><td><span class="chip have">HAVE</span></td></tr>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- ============ 10 ============ -->
+  <section class="spread" id="uc10">
+    <div class="fig">
+      <div class="num">10 · AUDITABLE RECEIPTS FOR REGULATED SHIPPING</div>
+      <figure>
+        <svg viewBox="0 0 520 210" role="img" aria-label="A recording as a chain: run header, result records, end trailer, each carrying the previous record's hash. Verify recomputes the chain offline. A signature over the trailer hash, not yet built, would prove origin as well as consistency.">
+          <rect class="rec" x="10" y="40" width="96" height="48" rx="3"/><text x="58" y="58" text-anchor="middle">run · seq 0</text><text class="lbl" x="58" y="72" text-anchor="middle">host, backend</text><text class="lbl" x="58" y="84" text-anchor="middle">prev: ""</text>
+          <path class="edge" d="M106,64 H130"/><text class="lbl" x="118" y="56" text-anchor="middle">prev</text>
+          <rect class="rec" x="132" y="40" width="96" height="48" rx="3"/><text x="180" y="58" text-anchor="middle">result · seq 1</text><text class="lbl" x="180" y="72" text-anchor="middle">content, checks</text><text class="lbl" x="180" y="84" text-anchor="middle">sha256 over canonical</text>
+          <path class="edge" d="M228,64 H252"/><text class="lbl" x="240" y="56" text-anchor="middle">prev</text>
+          <rect class="rec" x="254" y="40" width="96" height="48" rx="3"/><text x="302" y="58" text-anchor="middle">result · seq n</text><text class="lbl" x="302" y="72" text-anchor="middle">…</text>
+          <path class="edge" d="M350,64 H374"/><text class="lbl" x="362" y="56" text-anchor="middle">prev</text>
+          <rect class="rec" x="376" y="40" width="96" height="48" rx="3"/><text x="424" y="58" text-anchor="middle">end · seq n+1</text><text class="lbl" x="424" y="72" text-anchor="middle">count = n</text><text class="lbl" x="424" y="84" text-anchor="middle">sha256: tail hash</text>
+          <rect class="newb" x="376" y="120" width="134" height="44" rx="3"/><text class="newt" x="443" y="138" text-anchor="middle">signature over tail</text><text class="lbl" x="443" y="152" text-anchor="middle">Secure Enclave key · NEW</text>
+          <path class="edge2" d="M424,88 V120"/>
+          <rect class="box" x="10" y="120" width="130" height="44" rx="3"/><text x="75" y="138" text-anchor="middle">auditor: verify</text><text class="lbl" x="75" y="152" text-anchor="middle">offline, no model, no Apple</text>
+          <path class="edge" d="M140,142 H200"/><text class="lbl" x="170" y="134" text-anchor="middle">reads</text>
+          <text x="204" y="140">recomputes every hash</text><text x="204" y="154">and the chain → OK n results</text>
+          <text class="lbl" x="10" y="190">today: internal consistency is proven; origin is not. Anyone can rewrite a whole file and re-seal it.</text>
+          <text class="lbl" x="10" y="204">with the signature: who produced it, on which machine, is provable. Stated non-goal in v0.3.</text>
+        </svg>
+        <figcaption>The chain proves nothing was changed inside the file. A signature over the tail would prove who wrote it. That is the gap between logs and evidence.</figcaption>
+      </figure>
+    </div>
+    <div class="txt">
+      <h2>Ship a model feature with evidence, not logs.</h2>
+      <div class="whw">
+        <div><b>Why</b><p>Regulated teams need to show what the model did at release time, on what build, with what results, and that the record was not edited after the fact. Application logs do not carry the model build or a tamper check. Every septdrift record does.</p></div>
+        <div><b>How</b><p>Record at release, keep the file with the build artifacts, and verify it in the release checklist. Diff each subsequent OS build against it. Add a signature over the trailer hash when signing lands.</p></div>
+        <div><b>What</b><p>A file an auditor can verify offline with one command and no model access: prompts, answers, checks, timings, model asset IDs, host, and a chain that names the first altered record if any.</p></div>
+      </div>
+      <h3>Capabilities to nail it</h3>
+      <div class="scroll"><table class="cap">
+        <tr><th>Capability</th><th>Why it matters here</th><th>Status</th></tr>
+        <tr><td>Canonical bytes, chained SHA-256, `verify` offline, hash vectors for a second implementation</td><td>Consistency is provable now, by anyone.</td><td><span class="chip have">HAVE</span></td></tr>
+        <tr><td>Strict receipt typing; runID on every record; exclusive create</td><td>Verify must refuse a plausible forgery, not just a broken chain.</td><td><span class="chip wk2">WEEK 2</span></td></tr>
+        <tr><td>Signature over the tail hash with a Secure Enclave or developer key</td><td>Origin. The one capability this market cannot do without.</td><td><span class="chip new">NEW</span></td></tr>
+        <tr><td>Redaction mode: content hashed, not stored, with the check outcomes kept</td><td>Some prompts cannot leave the machine; the receipt still has to.</td><td><span class="chip new">NEW</span></td></tr>
+        <tr><td>Retention pointer: recording path and tail hash in the app's release notes</td><td>A convention, not code; it makes the receipt findable a year later.</td><td><span class="chip have">HAVE</span></td></tr>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- ============ roadmap ============ -->
+  <section class="roadmap">
+    <h3>Capability roadmap, read across the ten cases</h3>
+    <h2>Six new capabilities unlock eight of the ten cases. The rest is already built.</h2>
+    <p>Counted from the tables above. "Unlocks" means the case is not credible without it; "sharpens" means the case works today and the capability removes manual steps.</p>
+    <div class="scroll"><table class="cap rm">
+      <tr><th>Capability</th><th>Cases</th><th>Effect</th><th>Status</th></tr>
+      <tr><td>Strict receipt typing in `verify` (Codex #1, #7)</td><td>01 · 10</td><td>unlocks 10, sharpens 01</td><td><span class="chip wk2">WEEK 2</span></td></tr>
+      <tr><td>Tolerances (percentiles) and label sets in checks</td><td>03 · 08</td><td>sharpens both</td><td><span class="chip wk2">WEEK 2</span></td></tr>
+      <tr><td>PCC and provider backends behind `LanguageModel`</td><td>02</td><td>unlocks 02</td><td><span class="chip wk2">WEEK 2</span></td></tr>
+      <tr><td>Tool declarations, `toolCalls` on the record, `tool_called` check</td><td>06</td><td>unlocks the tool half of 06</td><td><span class="chip new">NEW</span></td></tr>
+      <tr><td>`--adapter` with adapter id in header and request hash; `--require-fix`; holdout tag</td><td>04</td><td>unlocks 04</td><td><span class="chip new">NEW</span></td></tr>
+      <tr><td>N-way table (`diff a b c`, `collect dir/`)</td><td>02 · 05</td><td>sharpens both</td><td><span class="chip new">NEW</span></td></tr>
+      <tr><td>`promote` recording → fixture; CI example; Linux fixture build</td><td>09</td><td>unlocks adoption of 09</td><td><span class="chip new">NEW</span></td></tr>
+      <tr><td>Signature over the tail hash; redaction mode</td><td>05 · 10</td><td>unlocks 10</td><td><span class="chip new">NEW</span></td></tr>
+      <tr><td>Explicit `no_error` check; locale option; `max_input_tokens`; warm-up policy</td><td>07 · 08</td><td>sharpens both</td><td><span class="chip new">NEW</span></td></tr>
+      <tr><td>Term-pair generator; rate-only report mode</td><td>03</td><td>sharpens 03</td><td><span class="chip new">NEW</span></td></tr>
+    </table></div>
+    <p><b>Order that follows the ranking:</b> strict verify typing, then backends, then adapters and tools. Signing last, because it serves one market and the chain already serves the other nine.</p>
+  </section>
+
+  <footer>Sources for the direction claims are in the 09-22 prediction note (Apple WWDC26 session 241, the apfel issues #189 and #193, Daring Fireball on PCC access). Every status chip reflects SPEC.md v0.3.3 and the day-5 triage in reviews/. PCC on macOS and the Linux build are unverified.</footer>
+</div>
