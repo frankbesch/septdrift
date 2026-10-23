@@ -6,6 +6,18 @@ hash-chained receipt, and `diff` scores two recordings against each other.
 It exits 1 when a check that passed now fails. The on-device model changes
 every September; septdrift tells you what your feature lost.
 
+## Install
+
+Homebrew, from the tap. It builds from source with the Command Line Tools'
+Swift, about two minutes:
+
+```bash
+brew install frankbesch/septdrift/septdrift
+```
+
+Or from a checkout: `swift build -c release`; the binary is
+`.build/release/septdrift`. `septdrift --version` prints `0.1.0`.
+
 ## Status
 
 Spec v0.3.8. 136 tests pass on the fixture backend with no model calls

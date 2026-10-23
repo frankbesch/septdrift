@@ -97,6 +97,7 @@ struct Septdrift: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "septdrift",
         abstract: "Run declared cases against a language-model backend and diff the recordings.",
+        version: "0.1.0",
         subcommands: [Run.self, Verify.self, Diff.self, Cases.self]
     )
 }
