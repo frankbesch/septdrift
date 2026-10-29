@@ -24,8 +24,15 @@ struct Diff: ParsableCommand {
     @Flag(name: .customLong("allow-request-drift"), help: "Tolerate a differing requestSHA256.")
     var allowRequestDrift = false
 
+    @Option(name: .long, help: "Pass-rate change treated as noise, 0 <= rate < 1.")
+    var tolerance: Double = 0
+
     func run() throws {
-        let options = DiffOptions(failOnFix: failOnFix, allowRequestDrift: allowRequestDrift)
+        guard tolerance >= 0, tolerance < 1 else {
+            CLI.bail("--tolerance must be in [0, 1): \(tolerance)", 3)
+        }
+        let options = DiffOptions(
+            failOnFix: failOnFix, allowRequestDrift: allowRequestDrift, tolerance: tolerance)
         let scorecard: Scorecard
         do {
             scorecard = try SeptdriftCore.Diff.diff(

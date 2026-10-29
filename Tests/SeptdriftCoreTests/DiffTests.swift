@@ -379,7 +379,7 @@ private let repoRoot = URL(fileURLWithPath: #filePath)
     let text = Diff.render(card)
     #expect(text.contains("side A: backend=fixture"))
     #expect(text.contains("2/3"))
-    #expect(text.contains("counts: flips=5 degrades=0 fixes=0 unchanged=8 improved=0 added=0 removed=0\n"))
+    #expect(text.contains("counts: flips=5 degrades=0 fixes=0 unchanged=8 improved=0 added=0 removed=0 noise=0\n"))
     #expect(text.contains("exit: 1"))
 }
 
@@ -413,4 +413,71 @@ private let repoRoot = URL(fileURLWithPath: #filePath)
 @Test func medianLargeIntegersDoesNotOverflow() {
     #expect(Diff.median([Int.max, Int.max - 1]) == Int.max)
     #expect(Diff.median([Int.max, Int.max]) == Int.max)
+}
+
+// MARK: - Tolerance and the noise class (SPEC §5, v0.3.9)
+
+/// One case "c1" with `reps` reps; side A passes `passA` reps and side B passes `passB`.
+/// Each call gets its own scratch directory.
+private func tolerancePair(
+    _ passA: Int, _ passB: Int, reps: Int = 3, tolerance: Double
+) throws -> Scorecard {
+    let dir = scratch()
+    let cases = [textCase("c1", repeat: reps)]
+    let a = try makeRecording(at: dir.appendingPathComponent("a.jsonl"), cases: cases) { _, rep in
+        rep < passA ? ok("ok") : ok("no")
+    }
+    let b = try makeRecording(at: dir.appendingPathComponent("b.jsonl"), cases: cases) { _, rep in
+        rep < passB ? ok("ok") : ok("no")
+    }
+    return try Diff.diff(a: a, b: b, options: DiffOptions(tolerance: tolerance))
+}
+
+@Test func toleranceZeroKeepsTodaysClasses() throws {
+    let pairs: [(Int, Int, DiffClass)] = [
+        (3, 2, .flip), (3, 1, .flip), (2, 1, .degrade), (1, 3, .fix), (2, 2, .unchanged),
+    ]
+    for (passA, passB, expected) in pairs {
+        let card = try tolerancePair(passA, passB, tolerance: 0)
+        #expect(classes(card)["c1|contains:ok"] == expected, "pair \(passA)/3 -> \(passB)/3")
+        #expect(card.counts.noise == 0)
+    }
+}
+
+@Test func toleranceTurnsOneRepIntoNoise() throws {
+    let pairs: [(Int, Int, DiffClass)] = [
+        (3, 2, .noise), (3, 1, .flip), (3, 0, .flip), (2, 1, .noise),
+        (1, 0, .noise), (0, 1, .noise), (1, 3, .fix), (2, 3, .noise),
+    ]
+    for (passA, passB, expected) in pairs {
+        let card = try tolerancePair(passA, passB, tolerance: 0.34)
+        #expect(classes(card)["c1|contains:ok"] == expected, "pair \(passA)/3 -> \(passB)/3")
+        #expect(card.exitCode == (expected == .flip ? 1 : 0), "pair \(passA)/3 -> \(passB)/3")
+        #expect(card.counts.total == card.rows.count)
+    }
+}
+
+@Test func toleranceNeverMakesNoiseAtRepeatOne() throws {
+    let card = try tolerancePair(1, 0, reps: 1, tolerance: 0.99)
+    #expect(classes(card)["c1|contains:ok"] == .flip)
+    #expect(card.exitCode == 1)
+}
+
+@Test func scorecardPrintsToleranceAndNoiseCount() throws {
+    let card = try tolerancePair(3, 2, tolerance: 0.34)
+    let text = Diff.render(card)
+    #expect(text.contains("\ntolerance=0.34\n\n"))
+    #expect(text.contains(" removed=0 noise=1\n"))
+
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = [.sortedKeys, .prettyPrinted, .withoutEscapingSlashes]
+    let data = try encoder.encode(card)
+    let object = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+    #expect((object?["tolerance"] as? Double) == 0.34)
+    #expect(((object?["counts"] as? [String: Any])?["noise"] as? Int) == 1)
+}
+
+@Test func epsilonAcceptsOneThird() throws {
+    let card = try tolerancePair(3, 2, tolerance: 1.0 / 3.0)
+    #expect(classes(card)["c1|contains:ok"] == .noise)
 }

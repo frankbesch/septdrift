@@ -12,10 +12,14 @@ public struct DiffOptions: Sendable {
     /// `--allow-request-drift`: tolerate a different `casesSHA256`; pairs whose
     /// `requestSHA256` differs are listed and excluded.
     public var allowRequestDrift: Bool
+    /// `--tolerance`: a pass-rate change of at most this size is `noise`. The CLI checks
+    /// the range [0, 1); the library does not.
+    public var tolerance: Double
 
-    public init(failOnFix: Bool = false, allowRequestDrift: Bool = false) {
+    public init(failOnFix: Bool = false, allowRequestDrift: Bool = false, tolerance: Double = 0) {
         self.failOnFix = failOnFix
         self.allowRequestDrift = allowRequestDrift
+        self.tolerance = tolerance
     }
 }
 
@@ -63,6 +67,8 @@ public enum DiffClass: String, Sendable, Codable, CaseIterable {
     case added
     /// Present on A only.
     case removed
+    /// delta != 0 and abs(delta) <= tolerance; reported and counted, never fails.
+    case noise
 }
 
 /// One side's header block: identity, assets, medians and error-kind counts (SPEC §5).
@@ -158,10 +164,11 @@ public struct DiffCounts: Sendable, Encodable, Equatable {
     public var improved: Int
     public var added: Int
     public var removed: Int
+    public var noise: Int
 
     public init(
         flips: Int = 0, degrades: Int = 0, fixes: Int = 0, unchanged: Int = 0,
-        improved: Int = 0, added: Int = 0, removed: Int = 0
+        improved: Int = 0, added: Int = 0, removed: Int = 0, noise: Int = 0
     ) {
         self.flips = flips
         self.degrades = degrades
@@ -170,9 +177,12 @@ public struct DiffCounts: Sendable, Encodable, Equatable {
         self.improved = improved
         self.added = added
         self.removed = removed
+        self.noise = noise
     }
 
-    public var total: Int { flips + degrades + fixes + unchanged + improved + added + removed }
+    public var total: Int {
+        flips + degrades + fixes + unchanged + improved + added + removed + noise
+    }
 }
 
 /// The whole `diff` answer. `--json` encodes this value.
@@ -187,10 +197,12 @@ public struct Scorecard: Sendable, Encodable, Equatable {
     public var requestChanged: [String]
     public var counts: DiffCounts
     public var exitCode: Int32
+    /// The `--tolerance` the classes were computed with.
+    public var tolerance: Double
 
     public init(
         sides: [Side], rows: [Row], onlyInA: [String], onlyInB: [String],
-        requestChanged: [String], counts: DiffCounts, exitCode: Int32
+        requestChanged: [String], counts: DiffCounts, exitCode: Int32, tolerance: Double = 0
     ) {
         self.sides = sides
         self.rows = rows
@@ -199,6 +211,7 @@ public struct Scorecard: Sendable, Encodable, Equatable {
         self.requestChanged = requestChanged
         self.counts = counts
         self.exitCode = exitCode
+        self.tolerance = tolerance
     }
 }
 
@@ -291,7 +304,7 @@ public enum Diff {
             for identity in identities {
                 let left = checksA[identity]
                 let right = checksB[identity]
-                let klass = classify(left, right)
+                let klass = classify(left, right, tolerance: options.tolerance)
                 switch klass {
                 case .flip: counts.flips += 1
                 case .degrade: counts.degrades += 1
@@ -300,6 +313,7 @@ public enum Diff {
                 case .improved: counts.improved += 1
                 case .added: counts.added += 1
                 case .removed: counts.removed += 1
+                case .noise: counts.noise += 1
                 }
                 rows.append(Row(
                     caseID: id,
@@ -317,21 +331,22 @@ public enum Diff {
         return Scorecard(
             sides: sides, rows: rows, onlyInA: onlyInA, onlyInB: onlyInB,
             requestChanged: requestChanged, counts: counts,
-            exitCode: failing ? 1 : 0)
+            exitCode: failing ? 1 : 0, tolerance: options.tolerance)
     }
 
-    /// SPEC §5 classification, in order: flip, fix, degrade, unchanged; `improved` is the
-    /// leftover case (rateB > rateA, rateB < 1.0), reported but never counted.
-    private static func classify(_ a: Tally?, _ b: Tally?) -> DiffClass {
+    /// SPEC §5 classification, in order: added/removed, unchanged, noise, flip, degrade,
+    /// fix, improved. `improved` is the leftover case (delta > tolerance, rateB < 1.0),
+    /// reported and counted. The epsilon only absorbs floating-point rounding.
+    private static func classify(_ a: Tally?, _ b: Tally?, tolerance: Double) -> DiffClass {
         guard let a else { return b == nil ? .unchanged : .added }
         guard let b else { return .removed }
         let rateA = a.rate
         let rateB = b.rate
-        if rateA == 1.0 && rateB < 1.0 { return .flip }
-        if rateA < 1.0 && rateB == 1.0 { return .fix }
-        if rateB < rateA { return .degrade }
-        if rateA == rateB { return .unchanged }
-        return .improved
+        let delta = rateB - rateA
+        if delta == 0 { return .unchanged }
+        if abs(delta) <= tolerance + 1e-9 { return .noise }
+        if delta < 0 { return rateA == 1.0 ? .flip : .degrade }
+        return rateB == 1.0 ? .fix : .improved
     }
 
     // MARK: - Per-side aggregation
@@ -416,6 +431,7 @@ public enum Diff {
                 + "medianWallMs=\(number(side.medianWallMs)) "
                 + "medianTokensOut=\(number(side.medianTokensOut)) errors=\(errors)")
         }
+        out.append("tolerance=\(s.tolerance)")
         out.append("")
 
         let header = ["caseID", "check", "rateA", "rateB", "Δ", "class"]
@@ -439,7 +455,8 @@ public enum Diff {
         out.append(
             "counts: flips=\(s.counts.flips) degrades=\(s.counts.degrades) "
             + "fixes=\(s.counts.fixes) unchanged=\(s.counts.unchanged) "
-            + "improved=\(s.counts.improved) added=\(s.counts.added) removed=\(s.counts.removed)")
+            + "improved=\(s.counts.improved) added=\(s.counts.added) removed=\(s.counts.removed) "
+            + "noise=\(s.counts.noise)")
         out.append("exit: \(s.exitCode)")
         return out.joined(separator: "\n") + "\n"
     }

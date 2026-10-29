@@ -93,3 +93,5 @@ Generate recordings before running the diff:
     septdrift run cases/day2.yaml --backend fixture --fixtures fixtures/side-a.jsonl --out side-a
     septdrift run cases/day2.yaml --backend fixture --fixtures fixtures/side-b.jsonl --out side-b
     septdrift diff side-a side-b
+
+Rendered at v0.3.8; v0.3.9 adds a tolerance= line and noise= to counts, both zero for these fixtures.

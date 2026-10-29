@@ -12,7 +12,8 @@ Homebrew, from the tap. It builds from source with the Command Line Tools'
 Swift, about two minutes:
 
 ```bash
-brew install frankbesch/septdrift/septdrift
+brew install \
+  frankbesch/septdrift/septdrift
 ```
 
 Or from a checkout: `swift build -c release`; the binary is
@@ -126,7 +127,19 @@ $B run cases/ --backend system \
 
 # Check the chain is whole.
 $B verify recordings/*.jsonl
+
+# Score one build against another.
+# At --tolerance 0.34, one rep moving
+# on a repeat-3 case is noise.
+$B diff --tolerance 0.34 \
+  recordings/a.jsonl recordings/b.jsonl
 ```
+
+`--tolerance <rate>` (0 to 1, default 0) treats a pass-rate move within the
+rate as `noise`: counted on its own line, never a failing exit. With
+`--tolerance 0.34` on a repeat-3 set, one rep moving is `noise`, not a flip.
+At any practical tolerance a repeat-1 case never yields `noise`: a single rep
+cannot separate noise from drift. The scorecard prints the tolerance it used.
 
 For a second Mac, `scripts/pack.sh` makes a tarball under 100 KB. On that
 Mac, `scripts/mini-run.sh` builds, runs every case, verifies, and leaves one

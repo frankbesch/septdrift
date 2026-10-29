@@ -143,18 +143,15 @@ Pure functions `(Check, Case, Result) -> Outcome {pass, reason}`. Rules, in orde
    arg = `field=` + canonical JSON of `{ladder, max, min}`.
 
 ## 5. Diff
-`diff <a.jsonl> <b.jsonl> [--json] [--fail-on-fix] [--allow-request-drift]`
+`diff <a.jsonl> <b.jsonl> [--json] [--fail-on-fix] [--allow-request-drift] [--tolerance <rate>]`
 Preconditions (exit 4 with reason if violated): both files verify; both complete; `casesSHA256` equal, or
 `--allow-request-drift` given (then pairs whose `requestSHA256` differ are listed as "request changed" and
 excluded from flips).
 - Pair by caseID. Unpaired ⇒ "only in A/B", not a flip.
-- Per (caseID, check identity (name,arg)): pass rate over reps on each side, `rateA`, `rateB`.
-  **flip** = rateA == 1.0 and rateB < 1.0. **degrade** = rateB < rateA otherwise (reported, no exit).
-  **fix** = rateA < 1.0 and rateB == 1.0. **improved** = rateB > rateA with rateB < 1.0 (reported, no exit).
-  Checks present on one side only ⇒ "check added/removed".
-- Scorecard (stdout, `--json`): header with backend, chip, osBuild, distinct assetIDs per side; table
+- Per (caseID, check identity (name,arg)): pass rate over reps on each side, `rateA`, `rateB`; `delta` = rateB − rateA; `t` = `--tolerance` (a rate in [0, 1), default 0). Checks present on one side only ⇒ "check added/removed" (classified first). Then, in this order: **unchanged** = delta == 0. **noise** (v0.3.9) = delta != 0 and |delta| <= t + 1e-9 (reported and counted, no exit). **flip** = delta < −t and rateA == 1.0. **degrade** = delta < −t and rateA < 1.0 (reported, no exit). **fix** = delta > t and rateB == 1.0. **improved** = delta > t and rateB < 1.0 (reported, no exit). With t = 0 the classes equal the v0.3.8 rules.
+- Scorecard (stdout, `--json`): header with backend, chip, osBuild, distinct assetIDs per side; a `tolerance=<t>` line (v0.3.9; `tolerance` in `--json`); table
   caseID · check · rateA · rateB · Δ; medians of wallMs and tokensOut over non-error results per side;
-  counts flips/degrades/fixes/unchanged/improved/added/removed, one per row, so they sum to the rows
+  counts flips/degrades/fixes/unchanged/improved/added/removed/noise (`counts.noise` in `--json`), one per row, so they sum to the rows
   (unchanged = both sides present and rateA == rateB); error-kind counts per side.
   Median over an even count = mean of the two middle values, rendered as an integer rounded half up.
 - Exit 1 if flips > 0 (`--fail-on-fix` adds fixes), else 0.
@@ -163,7 +160,7 @@ excluded from flips).
 ```
 septdrift run <cases-path> --backend system|fixture [--fixtures file] [--out file] [--force] [--no-hostname] [--no-warm-up]
 septdrift verify <file>
-septdrift diff <a> <b> [--json] [--fail-on-fix] [--allow-request-drift]
+septdrift diff <a> <b> [--json] [--fail-on-fix] [--allow-request-drift] [--tolerance <rate>]
 septdrift cases <cases-path>        # validate + list
 ```
 `<cases-path>`: file or directory (`*.yaml|*.yml|*.json`, sorted by filename). Default `--out`:
@@ -171,6 +168,7 @@ septdrift cases <cases-path>        # validate + list
 `--force`. `run` exits 0 when it completes, regardless of check outcomes or recorded errors (diff judges);
 2 only when the backend is unavailable before the run.
 Exit codes: 0 ok · 1 flips · 2 model unavailable · 3 validation · 4 I/O or incompatible inputs.
+A `--tolerance` outside [0, 1) is exit 3.
 An input that cannot be read (case file, fixture file, either diff side) is exit 4; a readable input
 that is wrong is exit 3 (v0.3.8). `run` reads the host facts by absolute tool path (`/usr/bin/sw_vers`,
 `/usr/sbin/sysctl`, `/bin/hostname`); a launch failure, nonzero status or empty output is exit 4.
@@ -188,9 +186,10 @@ that is wrong is exit 3 (v0.3.8). `run` reads the host facts by absolute tool pa
 
 ## 8. Non-goals (v0.3)
 Streaming, tool calls, PCC/MLX/Claude backends, Evaluations framework, LLM-as-judge or semantic checks,
-numeric tolerances and label sets (week 2), deadlines/cancellation, signing, GUI.
+per-check tolerances in the case file (week 2; a global diff-time tolerance landed in v0.3.9), deadlines/cancellation, signing, GUI.
 
 ## Amendment log
+- v0.3.9 (10-29, week 2): --tolerance <rate> on diff, the noise row class, tolerance= in the scorecard header, noise= in counts; no record or header field changes, every recording keeps verifying and casesSHA256 is unchanged.
 - v0.3.8 (09-30, week 2, Codex code review 0602 #4, #5, #8, #14, #18, #19): exact integers in canonical parse and in int checks; a cut-short final record is "incomplete"; `diff` verifies and scores one byte snapshot per side; unreadable inputs exit 4; host capture by absolute path with failures propagated. All eight deferred Codex items are now closed.
 - v0.3.7 (09-30, week 2): unrecorded warm-up call on `run --backend system`, `--no-warm-up` to skip; §2 and §6. No record or header field changes, so every recording keeps verifying and `casesSHA256` is unchanged.
 - v0.3.6 (09-29, week 2): the `counts:` line and `--json` counts gain `improved`, `added` and `removed`, appended after `unchanged`, so the counts sum to the rows. The first four fields keep their order and text. Exit rules are unchanged.
